@@ -23,21 +23,21 @@ import org.jboss.logging.Logger;
 public class ByteUtil {
 
    public static void debugFrame(Logger logger, String message, ByteBuf byteIn) {
-      if (logger.isTraceEnabled()) {
+//      if (logger.isTraceEnabled()) {
          int location = byteIn.readerIndex();
          // debugging
          byte[] frame = new byte[byteIn.writerIndex()];
          byteIn.readBytes(frame);
 
          try {
-            logger.trace(message + "\n" + ByteUtil.formatGroup(ByteUtil.bytesToHex(frame), 8, 16));
+            logger.info(message + "\n" + ByteUtil.formatGroup(ByteUtil.bytesToHex(frame), 8, 16));
          }
          catch (Exception e) {
             logger.warn(e.getMessage(), e);
          }
 
          byteIn.readerIndex(location);
-      }
+//      }
    }
 
    public static String formatGroup(String str, int groupSize, int lineBreak) {

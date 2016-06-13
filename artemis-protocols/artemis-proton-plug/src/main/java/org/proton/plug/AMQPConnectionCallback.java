@@ -37,4 +37,6 @@ public interface AMQPConnectionCallback {
    AMQPConnectionContext getConnection();
 
    ServerSASL[] getSASLMechnisms();
+
+   boolean isSupportsAnonymous();
 }

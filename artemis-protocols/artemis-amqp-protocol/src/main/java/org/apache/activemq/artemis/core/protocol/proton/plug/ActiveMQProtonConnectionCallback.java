@@ -56,6 +56,20 @@ public class ActiveMQProtonConnectionCallback implements AMQPConnectionCallback 
 
    @Override
    public ServerSASL[] getSASLMechnisms() {
+
+      ServerSASL[] result;
+
+      if (isSupportsAnonymous()) {
+         result = new ServerSASL[]{new ActiveMQPlainSASL(manager.getServer().getSecurityStore()), new AnonymousServerSASL()};
+      }
+      else {
+         result = new ServerSASL[]{new ActiveMQPlainSASL(manager.getServer().getSecurityStore())};
+      }
+
+      return result;
+   }
+
+   public boolean isSupportsAnonymous() {
       boolean supportsAnonymous = false;
       try {
          manager.getServer().getSecurityStore().authenticate(null, null, null);
@@ -64,17 +78,7 @@ public class ActiveMQProtonConnectionCallback implements AMQPConnectionCallback 
       catch (Exception e) {
          // authentication failed so no anonymous support
       }
-
-      ServerSASL[] result;
-
-      if (supportsAnonymous) {
-         result = new ServerSASL[]{new ActiveMQPlainSASL(manager.getServer().getSecurityStore()), new AnonymousServerSASL()};
-      }
-      else {
-         result = new ServerSASL[]{new ActiveMQPlainSASL(manager.getServer().getSecurityStore())};
-      }
-
-      return result;
+      return supportsAnonymous;
    }
 
    @Override

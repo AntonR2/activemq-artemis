@@ -69,6 +69,11 @@ public class ProtonINVMSPI implements AMQPConnectionCallback {
    }
 
    @Override
+   public boolean isSupportsAnonymous() {
+      return false;
+   }
+
+   @Override
    public void onTransport(final ByteBuf bytes, final AMQPConnectionContext connection) {
       if (log.isTraceEnabled()) {
          ByteUtil.debugFrame(log, "InVM->", bytes);
@@ -123,6 +128,11 @@ public class ProtonINVMSPI implements AMQPConnectionCallback {
       @Override
       public ServerSASL[] getSASLMechnisms() {
          return new ServerSASL[]{new AnonymousServerSASL(), new ServerSASLPlain()};
+      }
+
+      @Override
+      public boolean isSupportsAnonymous() {
+         return false;
       }
 
       @Override

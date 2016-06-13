@@ -100,5 +100,10 @@ public class AbstractConnectionContextTest {
       public ServerSASL[] getSASLMechnisms() {
          return null;
       }
+
+      @Override
+      public boolean isSupportsAnonymous() {
+         return false;
+      }
    }
 }
