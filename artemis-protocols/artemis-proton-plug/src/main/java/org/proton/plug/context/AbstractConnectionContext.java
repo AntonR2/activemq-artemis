@@ -98,9 +98,9 @@ public abstract class AbstractConnectionContext extends ProtonInitializable impl
 
    @Override
    public void inputBuffer(ByteBuf buffer) {
-      if (log.isTraceEnabled()) {
+//      if (log.isTraceEnabled()) {
          ByteUtil.debugFrame(log, "Buffer Received ", buffer);
-      }
+//      }
 
       handler.inputBuffer(buffer);
    }
