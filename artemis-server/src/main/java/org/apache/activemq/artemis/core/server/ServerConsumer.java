@@ -94,7 +94,9 @@ public interface ServerConsumer extends Consumer, ConsumerInfo {
 
    void reject(long messageID) throws Exception;
 
-   void individualCancel(long messageID, boolean failed) throws Exception;
+   void cancel(Transaction tx, long messageID) throws Exception;
+
+   void individualCancel(final long messageID, boolean failed) throws Exception;
 
    void forceDelivery(long sequence);
 

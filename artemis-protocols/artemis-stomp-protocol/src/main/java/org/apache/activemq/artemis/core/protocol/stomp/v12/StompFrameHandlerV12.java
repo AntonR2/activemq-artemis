@@ -74,7 +74,7 @@ public class StompFrameHandlerV12 extends StompFrameHandlerV11 {
       String txID = request.getHeader(Stomp.Headers.TRANSACTION);
 
       if (txID != null) {
-         ActiveMQServerLogger.LOGGER.stompTXAckNorSupported();
+         ActiveMQServerLogger.LOGGER.stompTXAckNotSupported();
       }
 
       if (messageID == null) {

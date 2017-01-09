@@ -54,6 +54,10 @@ public interface ActiveMQStompProtocolLogger extends BasicLogger {
    @Message(id = 222069, value = "Sent ERROR frame to STOMP client {0}: {1}", format = Message.Format.MESSAGE_FORMAT)
    void sentErrorToClient(String address, String message);
 
+   @LogMessage(level = Logger.Level.WARN)
+   @Message(id = 222070, value = "Stomp Transactional negative acknowledgement is not supported", format = Message.Format.MESSAGE_FORMAT)
+   void stompTXNackNotSupported();
+
    @LogMessage(level = Logger.Level.ERROR)
    @Message(id = 224023, value = "Unable to send frame {0}", format = Message.Format.MESSAGE_FORMAT)
    void errorSendingFrame(@Cause Exception e, StompFrame frame);

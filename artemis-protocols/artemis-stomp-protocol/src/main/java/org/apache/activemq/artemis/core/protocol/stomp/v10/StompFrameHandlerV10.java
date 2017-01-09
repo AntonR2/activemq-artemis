@@ -130,7 +130,7 @@ public class StompFrameHandlerV10 extends VersionedStompFrameHandler implements 
       String txID = request.getHeader(Stomp.Headers.TRANSACTION);
 
       if (txID != null) {
-         ActiveMQServerLogger.LOGGER.stompTXAckNorSupported();
+         ActiveMQServerLogger.LOGGER.stompTXAckNotSupported();
       }
 
       try {

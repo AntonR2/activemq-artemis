@@ -155,4 +155,7 @@ public interface ActiveMQStompProtocolMessageBundle {
 
    @Message(id = 339041, value = "Not allowed to specify {0} semantics on {1} address.", format = Message.Format.MESSAGE_FORMAT)
    ActiveMQStompException illegalSemantics(String requested, String exists);
+
+   @Message(id = 339042, value = "failed to nack because no message with id: {0}", format = Message.Format.MESSAGE_FORMAT)
+   ActiveMQStompException failToNackMissingID(long id);
 }

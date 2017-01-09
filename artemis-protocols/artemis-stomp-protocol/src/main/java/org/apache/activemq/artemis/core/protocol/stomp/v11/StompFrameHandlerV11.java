@@ -187,7 +187,7 @@ public class StompFrameHandlerV11 extends VersionedStompFrameHandler implements 
       String subscriptionID = request.getHeader(Stomp.Headers.Ack.SUBSCRIPTION);
 
       if (txID != null) {
-         ActiveMQServerLogger.LOGGER.stompTXAckNorSupported();
+         ActiveMQServerLogger.LOGGER.stompTXAckNotSupported();
       }
 
       if (subscriptionID == null) {
@@ -205,6 +205,32 @@ public class StompFrameHandlerV11 extends VersionedStompFrameHandler implements 
    }
 
    @Override
+   public StompFrame onNack(StompFrame request) {
+      StompFrame response = null;
+
+      String messageID = request.getHeader(Stomp.Headers.Ack.MESSAGE_ID);
+      String txID = request.getHeader(Stomp.Headers.TRANSACTION);
+      String subscriptionID = request.getHeader(Stomp.Headers.Ack.SUBSCRIPTION);
+
+      if (txID != null) {
+         ActiveMQServerLogger.LOGGER.stompTXNackNotSupported();
+      }
+
+      if (subscriptionID == null) {
+         response = BUNDLE.needSubscriptionID().setHandler(this).getFrame();
+         return response;
+      }
+
+      try {
+         connection.negativeAcknowledge(messageID, subscriptionID);
+      } catch (ActiveMQStompException e) {
+         response = e.getFrame();
+      }
+
+      return response;
+   }
+
+   @Override
    public StompFrame onStomp(StompFrame request) {
       if (!connection.isValid()) {
          return onConnect(request);
@@ -212,12 +238,12 @@ public class StompFrameHandlerV11 extends VersionedStompFrameHandler implements 
       return null;
    }
 
-   @Override
-   public StompFrame onNack(StompFrame request) {
-      //this eventually means discard the message (it never be redelivered again).
-      //we can consider supporting redeliver to a different sub.
-      return onAck(request);
-   }
+//   @Override
+//   public StompFrame onNack(StompFrame request) {
+//      //this eventually means discard the message (it never be redelivered again).
+//      //we can consider supporting redeliver to a different sub.
+//      return onAck(request);
+//   }
 
    @Override
    public void replySent(StompFrame reply) {

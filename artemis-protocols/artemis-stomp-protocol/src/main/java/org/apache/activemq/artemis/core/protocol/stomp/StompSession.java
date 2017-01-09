@@ -245,6 +245,38 @@ public class StompSession implements SessionCallback {
       session.commit();
    }
 
+   public void negativeAcknowledge(String messageID, String subscriptionID) throws Exception {
+      long id = Long.parseLong(messageID);
+      Pair<Long, Integer> pair = messagesToAck.remove(id);
+
+      if (pair == null) {
+         throw BUNDLE.failToNackMissingID(id).setHandler(connection.getFrameHandler());
+      }
+
+      long consumerID = pair.getA();
+      int credits = pair.getB();
+
+      StompSubscription sub = subscriptions.get(consumerID);
+
+      if (subscriptionID != null) {
+         if (!sub.getID().equals(subscriptionID)) {
+            throw BUNDLE.subscriptionIDMismatch(subscriptionID, sub.getID()).setHandler(connection.getFrameHandler());
+         }
+      }
+
+//      if (this.consumerCredits != -1) {
+//         session.receiveConsumerCredits(consumerID, credits);
+//      }
+
+      if (sub.getAck().equals(Stomp.Headers.Subscribe.AckModeValues.CLIENT_INDIVIDUAL)) {
+         session.individualCancel(consumerID, id, false);
+      } else {
+         session.acknowledge(consumerID, id);
+      }
+
+      session.commit();
+   }
+
    public StompPostReceiptFunction addSubscription(long consumerID,
                                String subscriptionID,
                                String clientID,

@@ -739,6 +739,16 @@ public final class StompConnection implements RemotingConnection {
       }
    }
 
+   public void negativeAcknowledge(String messageID, String subscriptionID) throws ActiveMQStompException {
+      try {
+         manager.negativeAcknowledge(this, messageID, subscriptionID);
+      } catch (ActiveMQStompException e) {
+         throw e;
+      } catch (Exception e) {
+         throw BUNDLE.errorAck(messageID, e).setHandler(frameHandler);
+      }
+   }
+
    public String getVersion() {
       return String.valueOf(version);
    }

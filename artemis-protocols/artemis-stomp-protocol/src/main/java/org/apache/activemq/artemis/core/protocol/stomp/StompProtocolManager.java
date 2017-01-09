@@ -366,6 +366,11 @@ public class StompProtocolManager extends AbstractProtocolManager<StompFrame, St
       stompSession.acknowledge(messageID, subscriptionID);
    }
 
+   public void negativeAcknowledge(StompConnection connection, String messageID, String subscriptionID) throws Exception {
+      StompSession stompSession = getSession(connection);
+      stompSession.negativeAcknowledge(messageID, subscriptionID);
+   }
+
    public void beginTransaction(StompConnection connection, String txID) throws Exception {
       ActiveMQServerLogger.LOGGER.stompBeginTX(txID);
       if (transactedSessions.containsKey(txID)) {
