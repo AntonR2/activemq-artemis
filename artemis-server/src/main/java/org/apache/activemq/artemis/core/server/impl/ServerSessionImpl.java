@@ -921,6 +921,16 @@ public class ServerSessionImpl implements ServerSession, FailureListener {
    }
 
    @Override
+   public void cancel(final long consumerID, final long messageID, boolean failed) throws Exception {
+      ServerConsumer consumer = locateConsumer(consumerID);
+
+      if (consumer != null) {
+         consumer.cancel(messageID, failed);
+      }
+
+   }
+
+   @Override
    public void individualCancel(final long consumerID, final long messageID, boolean failed) throws Exception {
       ServerConsumer consumer = locateConsumer(consumerID);
 

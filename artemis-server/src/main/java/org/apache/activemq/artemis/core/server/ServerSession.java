@@ -62,7 +62,9 @@ public interface ServerSession extends SecurityAuth {
 
    void individualAcknowledge(long consumerID, long messageID) throws Exception;
 
-   void individualCancel(long consumerID, long messageID, boolean failed) throws Exception;
+   void cancel(final long consumerID, final long messageID, boolean failed) throws Exception;
+
+   void individualCancel(final long consumerID, final long messageID, boolean failed) throws Exception;
 
    void expire(long consumerID, long messageID) throws Exception;
 

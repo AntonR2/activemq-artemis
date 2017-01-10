@@ -254,7 +254,6 @@ public class StompSession implements SessionCallback {
       }
 
       long consumerID = pair.getA();
-      int credits = pair.getB();
 
       StompSubscription sub = subscriptions.get(consumerID);
 
@@ -264,14 +263,10 @@ public class StompSession implements SessionCallback {
          }
       }
 
-//      if (this.consumerCredits != -1) {
-//         session.receiveConsumerCredits(consumerID, credits);
-//      }
-
       if (sub.getAck().equals(Stomp.Headers.Subscribe.AckModeValues.CLIENT_INDIVIDUAL)) {
-         session.individualCancel(consumerID, id, false);
+         session.individualCancel(consumerID, id, true);
       } else {
-         session.acknowledge(consumerID, id);
+         session.cancel(consumerID, id, true);
       }
 
       session.commit();

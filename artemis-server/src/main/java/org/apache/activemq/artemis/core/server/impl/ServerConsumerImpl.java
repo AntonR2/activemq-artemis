@@ -961,23 +961,12 @@ public class ServerConsumerImpl implements ServerConsumer, ReadyListener {
    }
 
    @Override
-   public void cancel(Transaction tx, final long messageID) throws Exception {
+   public void cancel(final long messageID, boolean failed) throws Exception {
       if (browseOnly) {
          return;
       }
 
-      // Cancel cancels all refs delivered by the consumer up to and including the one explicitly
-      // cancelled
-
-      // We use a transaction here as if the message is not found, we should rollback anything done
-      // This could eventually happen on retries during transactions, and we need to make sure we don't ACK things we are not supposed to acknowledge
-
-      boolean startedTransaction = false;
-
-      if (tx == null) {
-         startedTransaction = true;
-         tx = new TransactionImpl(storageManager);
-      }
+      // Cancels all refs delivered to the consumer up to and including the one explicitly cancelled
 
       try {
 
@@ -988,37 +977,26 @@ public class ServerConsumerImpl implements ServerConsumer, ReadyListener {
             }
 
             if (logger.isTraceEnabled()) {
-               logger.trace("NACKing ref " + ref + " on tx= " + tx + ", consumer=" + this);
+               logger.trace("NACKing ref " + ref + " on consumer=" + this);
             }
 
             if (ref == null) {
                ActiveMQIllegalStateException ils = ActiveMQMessageBundle.BUNDLE.consumerNoReference(id, messageID, messageQueue.getName());
-               tx.markAsRollbackOnly(ils);
                throw ils;
             }
 
-            ref.decrementDeliveryCount();
+            if (!failed) {
+               ref.decrementDeliveryCount();
+            }
+
             ref.getQueue().cancel(ref, System.currentTimeMillis());
          } while (ref.getMessage().getMessageID() != messageID);
 
-         if (startedTransaction) {
-            tx.commit();
-         }
       } catch (ActiveMQException e) {
-         if (startedTransaction) {
-            tx.rollback();
-         } else {
-            tx.markAsRollbackOnly(e);
-         }
          throw e;
       } catch (Throwable e) {
          ActiveMQServerLogger.LOGGER.errorAckingMessage((Exception) e);
          ActiveMQException activeMQIllegalStateException = new ActiveMQIllegalStateException(e.getMessage());
-         if (startedTransaction) {
-            tx.rollback();
-         } else {
-            tx.markAsRollbackOnly(activeMQIllegalStateException);
-         }
          throw activeMQIllegalStateException;
       }
    }

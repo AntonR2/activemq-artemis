@@ -38,6 +38,7 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.core.protocol.stomp.Stomp;
 import org.apache.activemq.artemis.core.protocol.stomp.StompConnection;
 import org.apache.activemq.artemis.core.protocol.stomp.v11.StompFrameHandlerV11;
+import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.tests.integration.IntegrationTestLogger;
 import org.apache.activemq.artemis.tests.integration.stomp.StompTestBase;
@@ -904,12 +905,22 @@ public class StompV11Test extends StompTestBase {
    }
 
    @Test
-   public void testNack() throws Exception {
+   public void testNackWithMultipleMessages() throws Exception {
+      SimpleString dla = SimpleString.toSimpleString(getName() + "DLA");
+      server.getActiveMQServer().createQueue(dla, RoutingType.ANYCAST, dla, null, true, false);
+      server.getActiveMQServer().getAddressSettingsRepository().addMatch(getQueueName(), new AddressSettings().setMaxDeliveryAttempts(1).setDeadLetterAddress(dla));
+
       conn.connect(defUser, defPass);
 
       subscribe(conn, "sub1", Stomp.Headers.Subscribe.AckModeValues.CLIENT);
 
       sendJmsMessage(getName());
+      sendJmsMessage(getName());
+      sendJmsMessage(getName());
+
+      conn.receiveFrame();
+
+      conn.receiveFrame();
 
       ClientStompFrame frame = conn.receiveFrame();
 
@@ -921,10 +932,41 @@ public class StompV11Test extends StompTestBase {
 
       conn.disconnect();
 
-      //Nack makes the message be dropped.
-      MessageConsumer consumer = session.createConsumer(queue);
-      Message message = consumer.receive(1000);
-      Assert.assertNull(message);
+      assertEquals(0, server.getActiveMQServer().locateQueue(SimpleString.toSimpleString(getQueueName())).getMessageCount());
+      assertEquals(3, server.getActiveMQServer().locateQueue(dla).getMessageCount());
+   }
+
+   @Test
+   public void testIndividualNack() throws Exception {
+      SimpleString dla = SimpleString.toSimpleString(getName() + "DLA");
+      server.getActiveMQServer().createQueue(dla, RoutingType.ANYCAST, dla, null, true, false);
+      server.getActiveMQServer().getAddressSettingsRepository().addMatch(getQueueName(), new AddressSettings().setMaxDeliveryAttempts(1).setDeadLetterAddress(dla));
+
+      conn.connect(defUser, defPass);
+
+      subscribe(conn, "sub1", Stomp.Headers.Subscribe.AckModeValues.CLIENT_INDIVIDUAL);
+
+      sendJmsMessage(getName());
+      sendJmsMessage(getName());
+      sendJmsMessage(getName());
+
+      IntegrationTestLogger.LOGGER.info("=== Received: " + conn.receiveFrame());
+      IntegrationTestLogger.LOGGER.info("=== Received: " + conn.receiveFrame());
+
+      ClientStompFrame frame = conn.receiveFrame();
+
+      IntegrationTestLogger.LOGGER.info("=== Received: " + frame);
+
+      String messageID = frame.getHeader(Stomp.Headers.Message.MESSAGE_ID);
+
+      nack(conn, "sub1", messageID);
+
+      unsubscribe(conn, "sub1");
+
+      conn.disconnect();
+
+      assertEquals(2, server.getActiveMQServer().locateQueue(SimpleString.toSimpleString(getQueueName())).getMessageCount());
+      assertEquals(1, server.getActiveMQServer().locateQueue(dla).getMessageCount());
    }
 
    @Test

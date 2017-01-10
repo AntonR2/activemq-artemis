@@ -91,6 +91,31 @@ public class StompFrameHandlerV12 extends StompFrameHandlerV11 {
       return response;
    }
 
+   @Override
+   public StompFrame onNack(StompFrame request) {
+      StompFrame response = null;
+
+      String messageID = request.getHeader(Stomp.Headers.Ack.MESSAGE_ID);
+      String txID = request.getHeader(Stomp.Headers.TRANSACTION);
+
+      if (txID != null) {
+         ActiveMQServerLogger.LOGGER.stompTXNackNotSupported();
+      }
+
+      if (messageID == null) {
+         ActiveMQStompException error = BUNDLE.noIDInAck().setHandler(connection.getFrameHandler());
+         return error.getFrame();
+      }
+
+      try {
+         connection.negativeAcknowledge(messageID, null);
+      } catch (ActiveMQStompException e) {
+         response = e.getFrame();
+      }
+
+      return response;
+   }
+
    protected class StompDecoderV12 extends StompDecoderV11 {
 
       protected boolean nextEOLChar = false;
