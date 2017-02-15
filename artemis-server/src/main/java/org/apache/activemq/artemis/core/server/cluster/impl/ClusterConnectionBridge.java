@@ -371,6 +371,7 @@ public class ClusterConnectionBridge extends BridgeImpl {
          clusterConnection.removeRecord(targetNodeID);
       } else {
          clusterConnection.disconnectRecord(targetNodeID);
+         serverLocator.notifyNodeDown(System.currentTimeMillis(), targetNodeID);
       }
    }
 
