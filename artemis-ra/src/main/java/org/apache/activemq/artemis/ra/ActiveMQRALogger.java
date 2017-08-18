@@ -56,8 +56,8 @@ public interface ActiveMQRALogger extends BasicLogger {
    void awaitingTopicQueueCreation(String destination);
 
    @LogMessage(level = Logger.Level.INFO)
-   @Message(id = 151001, value = "Attempting to reconnect {0}", format = Message.Format.MESSAGE_FORMAT)
-   void attemptingReconnect(ActiveMQActivationSpec spec);
+   @Message(id = 151001, value = "Attempting to reconnect {0}: {1}", format = Message.Format.MESSAGE_FORMAT)
+   void attemptingReconnect(int reconnectCount, ActiveMQActivationSpec spec);
 
    @LogMessage(level = Logger.Level.INFO)
    @Message(id = 151002, value = "Reconnected with broker", format = Message.Format.MESSAGE_FORMAT)

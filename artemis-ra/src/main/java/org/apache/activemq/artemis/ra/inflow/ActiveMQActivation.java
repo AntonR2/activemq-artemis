@@ -57,6 +57,7 @@ import org.apache.activemq.artemis.ra.ActiveMQRaUtils;
 import org.apache.activemq.artemis.ra.ActiveMQResourceAdapter;
 import org.apache.activemq.artemis.service.extensions.xa.recovery.XARecoveryConfig;
 import org.apache.activemq.artemis.utils.FutureLatch;
+import org.apache.activemq.artemis.utils.LoggingUtil;
 import org.apache.activemq.artemis.utils.PasswordMaskingUtil;
 import org.jboss.logging.Logger;
 
@@ -632,7 +633,7 @@ public class ActiveMQActivation {
             ActiveMQRALogger.LOGGER.failureInActivation(failure, spec);
          }
       }
-      int reconnectCount = 0;
+      int reconnectCount = 1;
       int setupAttempts = spec.getSetupAttempts();
       long setupInterval = spec.getSetupInterval();
 
@@ -641,7 +642,7 @@ public class ActiveMQActivation {
          return;
       try {
          Throwable lastException = failure;
-         while (deliveryActive.get() && (setupAttempts == -1 || reconnectCount < setupAttempts)) {
+         while (deliveryActive.get() && (setupAttempts == -1 || reconnectCount <= setupAttempts)) {
             teardown();
 
             try {
@@ -651,8 +652,8 @@ public class ActiveMQActivation {
                break;
             }
 
-            if (reconnectCount < 1) {
-               ActiveMQRALogger.LOGGER.attemptingReconnect(spec);
+            if (LoggingUtil.shouldLog(reconnectCount)) {
+               ActiveMQRALogger.LOGGER.attemptingReconnect(reconnectCount, spec);
             }
             try {
                setup();
