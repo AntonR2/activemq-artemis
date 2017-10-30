@@ -140,7 +140,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createQueueConnection()");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.QUEUE_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.QUEUE_CONNECTION);
 
       if (ActiveMQRAConnectionFactoryImpl.trace) {
          ActiveMQRALogger.LOGGER.trace("Created queue connection: " + s);
@@ -163,7 +163,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createQueueConnection(" + userName + ", ****)");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.QUEUE_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.QUEUE_CONNECTION);
       s.setUserName(userName);
       s.setPassword(password);
 
@@ -188,7 +188,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createTopicConnection()");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.TOPIC_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.TOPIC_CONNECTION);
 
       if (ActiveMQRAConnectionFactoryImpl.trace) {
          ActiveMQRALogger.LOGGER.trace("Created topic connection: " + s);
@@ -211,7 +211,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createTopicConnection(" + userName + ", ****)");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.TOPIC_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.TOPIC_CONNECTION);
       s.setUserName(userName);
       s.setPassword(password);
       validateUser(s);
@@ -235,7 +235,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createConnection()");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.CONNECTION);
 
       if (ActiveMQRAConnectionFactoryImpl.trace) {
          ActiveMQRALogger.LOGGER.trace("Created connection: " + s);
@@ -258,7 +258,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createConnection(" + userName + ", ****)");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.CONNECTION);
       s.setUserName(userName);
       s.setPassword(password);
 
@@ -283,7 +283,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createXAQueueConnection()");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.XA_QUEUE_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.XA_QUEUE_CONNECTION);
 
       if (ActiveMQRAConnectionFactoryImpl.trace) {
          ActiveMQRALogger.LOGGER.trace("Created queue connection: " + s);
@@ -306,7 +306,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createXAQueueConnection(" + userName + ", ****)");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.XA_QUEUE_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.XA_QUEUE_CONNECTION);
       s.setUserName(userName);
       s.setPassword(password);
       validateUser(s);
@@ -330,7 +330,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createXATopicConnection()");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.XA_TOPIC_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.XA_TOPIC_CONNECTION);
 
       if (ActiveMQRAConnectionFactoryImpl.trace) {
          ActiveMQRALogger.LOGGER.trace("Created topic connection: " + s);
@@ -353,7 +353,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createXATopicConnection(" + userName + ", ****)");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.XA_TOPIC_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.XA_TOPIC_CONNECTION);
       s.setUserName(userName);
       s.setPassword(password);
       validateUser(s);
@@ -377,7 +377,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createXAConnection()");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.XA_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.XA_CONNECTION);
 
       if (ActiveMQRAConnectionFactoryImpl.trace) {
          ActiveMQRALogger.LOGGER.trace("Created connection: " + s);
@@ -400,7 +400,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
          ActiveMQRALogger.LOGGER.trace("createXAConnection(" + userName + ", ****)");
       }
 
-      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.XA_CONNECTION);
+      ActiveMQRASessionFactoryImpl s = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.XA_CONNECTION);
       s.setUserName(userName);
       s.setPassword(password);
       validateUser(s);
@@ -425,7 +425,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
    @Override
    public JMSContext createContext(String userName, String password, int sessionMode) {
       @SuppressWarnings("resource")
-      ActiveMQRASessionFactoryImpl conn = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.CONNECTION);
+      ActiveMQRASessionFactoryImpl conn = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.CONNECTION);
       conn.setUserName(userName);
       conn.setPassword(password);
       try {
@@ -454,7 +454,7 @@ public class ActiveMQRAConnectionFactoryImpl implements ActiveMQRAConnectionFact
 
    @Override
    public XAJMSContext createXAContext(String userName, String password) {
-      ActiveMQRASessionFactoryImpl conn = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTM(), ActiveMQRAConnectionFactory.XA_CONNECTION);
+      ActiveMQRASessionFactoryImpl conn = new ActiveMQRASessionFactoryImpl(mcf, cm, getResourceAdapter().getTSR(), ActiveMQRAConnectionFactory.XA_CONNECTION);
       conn.setUserName(userName);
       conn.setPassword(password);
       try {

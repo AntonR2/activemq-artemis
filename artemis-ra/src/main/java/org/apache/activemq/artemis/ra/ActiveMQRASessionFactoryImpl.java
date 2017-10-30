@@ -38,9 +38,8 @@ import javax.jms.XATopicSession;
 import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.spi.ConnectionManager;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
+import javax.transaction.Status;
+import javax.transaction.TransactionSynchronizationRegistry;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -98,7 +97,7 @@ public final class ActiveMQRASessionFactoryImpl extends ActiveMQConnectionForCon
     * The managed connection factory
     */
    private final ActiveMQRAManagedConnectionFactory mcf;
-   private TransactionManager tm;
+   private TransactionSynchronizationRegistry tsr;
 
    /**
     * The connection manager
@@ -131,11 +130,11 @@ public final class ActiveMQRASessionFactoryImpl extends ActiveMQConnectionForCon
     */
    public ActiveMQRASessionFactoryImpl(final ActiveMQRAManagedConnectionFactory mcf,
                                        final ConnectionManager cm,
-                                       final TransactionManager tm,
+                                       final TransactionSynchronizationRegistry tsr,
                                        final int type) {
       this.mcf = mcf;
 
-      this.tm = tm;
+      this.tsr = tsr;
 
       if (cm == null) {
          this.cm = new ActiveMQRAConnectionManager();
@@ -931,14 +930,11 @@ public final class ActiveMQRASessionFactoryImpl extends ActiveMQConnectionForCon
 
    private boolean inJtaTransaction() {
       boolean inJtaTx = false;
-      if (tm != null) {
-         Transaction tx = null;
-         try {
-            tx = tm.getTransaction();
-         } catch (SystemException e) {
-            //assume false
+      if (tsr != null) {
+         int status = tsr.getTransactionStatus();
+         if (status == Status.STATUS_ACTIVE || status == Status.STATUS_PREPARING || status == Status.STATUS_PREPARED || status == Status.STATUS_COMMITTING) {
+            inJtaTx = true;
          }
-         inJtaTx = tx != null;
       }
       return inJtaTx;
    }

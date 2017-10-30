@@ -306,7 +306,7 @@ public class ActiveMQActivation {
          try {
             cf = factory.getServerLocator().createSessionFactory();
             session = setupSession(cf);
-            ActiveMQMessageHandler handler = new ActiveMQMessageHandler(factory, this, ra.getTM(), (ClientSessionInternal) session, cf, i);
+            ActiveMQMessageHandler handler = new ActiveMQMessageHandler(factory, this, ra.getTSR(), (ClientSessionInternal) session, cf, i);
             handler.setup();
             handlers.add(handler);
          } catch (Exception e) {

@@ -27,9 +27,11 @@ import javax.resource.spi.endpoint.MessageEndpoint;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
 import javax.resource.spi.work.ExecutionContext;
 import javax.resource.spi.work.Work;
+import javax.resource.spi.work.WorkContext;
 import javax.resource.spi.work.WorkException;
 import javax.resource.spi.work.WorkListener;
 import javax.resource.spi.work.WorkManager;
+import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.xa.XAResource;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -102,6 +104,11 @@ public abstract class ActiveMQRATestBase extends JMSTestBase {
       }
 
       @Override
+      public MessageEndpoint createEndpoint(XAResource xaResource, long timeout) throws UnavailableException {
+         return createEndpoint(xaResource);
+      }
+
+      @Override
       public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
          return isDeliveryTransacted;
       }
@@ -161,6 +168,16 @@ public abstract class ActiveMQRATestBase extends JMSTestBase {
 
       @Override
       public Timer createTimer() throws UnavailableException {
+         return null;
+      }
+
+      @Override
+      public boolean isContextSupported(Class<? extends WorkContext> workContextClass) {
+         return false;
+      }
+
+      @Override
+      public TransactionSynchronizationRegistry getTransactionSynchronizationRegistry() {
          return null;
       }
 

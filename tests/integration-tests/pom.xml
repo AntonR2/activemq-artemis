@@ -70,6 +70,13 @@
          <groupId>org.apache.activemq</groupId>
          <artifactId>artemis-jms-server</artifactId>
          <version>${project.version}</version>
+         <exclusions>
+            <exclusion>
+               <!-- exclude JCA 1.6 spec here so geronimo dependency will be used -->
+               <groupId>org.jboss.spec.javax.resource</groupId>
+               <artifactId>jboss-connector-api_1.6_spec</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
       <dependency>
          <groupId>org.apache.activemq</groupId>
@@ -201,7 +208,7 @@
       </dependency>
       <dependency>
          <groupId>org.apache.geronimo.specs</groupId>
-         <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
+         <artifactId>geronimo-j2ee-connector_1.6_spec</artifactId>
       </dependency>
       <dependency>
          <groupId>org.apache.geronimo.specs</groupId>

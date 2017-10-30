@@ -32,9 +32,7 @@ import javax.resource.spi.ManagedConnectionMetaData;
 import javax.resource.spi.SecurityException;
 import javax.security.auth.Subject;
 import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
+import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.xa.XAResource;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -122,7 +120,7 @@ public final class ActiveMQRAManagedConnection implements ManagedConnection, Exc
 
    private XAResource xaResource;
 
-   private final TransactionManager tm;
+   private final TransactionSynchronizationRegistry tsr;
 
    private boolean inManagedTx;
 
@@ -145,7 +143,7 @@ public final class ActiveMQRAManagedConnection implements ManagedConnection, Exc
 
       this.mcf = mcf;
       this.cri = cri;
-      this.tm = ra.getTM();
+      this.tsr = ra.getTSR();
       this.ra = ra;
       this.userName = userName;
       this.password = password;
@@ -349,20 +347,11 @@ public final class ActiveMQRAManagedConnection implements ManagedConnection, Exc
 
    public void checkTransactionActive() throws JMSException {
       // don't bother looking at the transaction if there's an active XID
-      if (!inManagedTx && tm != null) {
-         try {
-            Transaction tx = tm.getTransaction();
-            if (tx != null) {
-               int status = tx.getStatus();
-               // Only allow states that will actually succeed
-               if (status != Status.STATUS_ACTIVE && status != Status.STATUS_PREPARING && status != Status.STATUS_PREPARED && status != Status.STATUS_COMMITTING) {
-                  throw new javax.jms.IllegalStateException("Transaction " + tx + " not active");
-               }
-            }
-         } catch (SystemException e) {
-            JMSException jmsE = new javax.jms.IllegalStateException("Unexpected exception on the Transaction ManagerTransaction");
-            jmsE.initCause(e);
-            throw jmsE;
+      if (!inManagedTx && tsr != null) {
+         int status = tsr.getTransactionStatus();
+         // Only allow states that will actually succeed
+         if (status != Status.STATUS_ACTIVE && status != Status.STATUS_PREPARING && status != Status.STATUS_PREPARED && status != Status.STATUS_COMMITTING) {
+            throw new javax.jms.IllegalStateException("Transaction " + tsr.getTransactionKey() + " not active");
          }
       }
    }

@@ -20,8 +20,7 @@ import javax.jms.MessageListener;
 import javax.resource.ResourceException;
 import javax.resource.spi.endpoint.MessageEndpoint;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
+import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.xa.XAResource;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,7 +79,7 @@ public class ActiveMQMessageHandler implements MessageHandler, FailoverEventList
 
    private final int sessionNr;
 
-   private final TransactionManager tm;
+   private final TransactionSynchronizationRegistry tsr;
 
    private ClientSessionFactory cf;
 
@@ -88,7 +87,7 @@ public class ActiveMQMessageHandler implements MessageHandler, FailoverEventList
 
    public ActiveMQMessageHandler(final ConnectionFactoryOptions options,
                                  final ActiveMQActivation activation,
-                                 final TransactionManager tm,
+                                 final TransactionSynchronizationRegistry tsr,
                                  final ClientSessionInternal session,
                                  final ClientSessionFactory cf,
                                  final int sessionNr) {
@@ -97,7 +96,7 @@ public class ActiveMQMessageHandler implements MessageHandler, FailoverEventList
       this.session = session;
       this.cf = cf;
       this.sessionNr = sessionNr;
-      this.tm = tm;
+      this.tsr = tsr;
    }
 
    public void setup() throws Exception {
@@ -281,10 +280,6 @@ public class ActiveMQMessageHandler implements MessageHandler, FailoverEventList
       boolean beforeDelivery = false;
 
       try {
-         if (activation.getActivationSpec().getTransactionTimeout() > 0 && tm != null) {
-            tm.setTransactionTimeout(activation.getActivationSpec().getTransactionTimeout());
-         }
-
          if (logger.isTraceEnabled()) {
             logger.trace("HornetQMessageHandler::calling beforeDelivery on message " + message);
          }
@@ -330,16 +325,13 @@ public class ActiveMQMessageHandler implements MessageHandler, FailoverEventList
          ActiveMQRALogger.LOGGER.errorDeliveringMessage(e);
          // we need to call before/afterDelivery as a pair
          if (beforeDelivery) {
-            if (useXA && tm != null) {
+            if (useXA && tsr != null) {
                // This is the job for the container,
                // however if the container throws an exception because of some other errors,
                // there are situations where the container is not setting the rollback only
                // this is to avoid a scenario where afterDelivery would kick in
                try {
-                  Transaction tx = tm.getTransaction();
-                  if (tx != null) {
-                     tx.setRollbackOnly();
-                  }
+                  tsr.setRollbackOnly();
                } catch (Exception e1) {
                   ActiveMQRALogger.LOGGER.unableToClearTheTransaction(e1);
                }

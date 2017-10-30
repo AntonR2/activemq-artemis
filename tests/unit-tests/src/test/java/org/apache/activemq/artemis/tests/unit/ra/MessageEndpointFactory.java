@@ -29,6 +29,11 @@ public class MessageEndpointFactory implements javax.resource.spi.endpoint.Messa
    }
 
    @Override
+   public MessageEndpoint createEndpoint(XAResource xaResource, long l) throws UnavailableException {
+      return null;
+   }
+
+   @Override
    public boolean isDeliveryTransacted(final Method arg0) throws NoSuchMethodException {
       return false;
    }
