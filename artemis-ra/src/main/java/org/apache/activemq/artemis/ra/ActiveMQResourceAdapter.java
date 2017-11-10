@@ -1558,8 +1558,7 @@ public class ActiveMQResourceAdapter implements ResourceAdapter, Serializable {
                                       final Integer dupsOkBatchSize,
                                       final Integer transactionBatchSize,
                                       final boolean deliveryTransacted,
-                                      final boolean useLocalTx,
-                                      final Integer txTimeout) throws Exception {
+                                      final boolean useLocalTx) throws Exception {
 
       ClientSession result;
 

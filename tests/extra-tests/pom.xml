@@ -116,6 +116,12 @@
          <version>${project.version}</version>
          <scope>test</scope>
          <type>test-jar</type>
+         <exclusions>
+            <exclusion>
+               <groupId>javax.transaction</groupId>
+               <artifactId>javax.transaction-api</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
       <dependency>
          <groupId>org.apache.activemq</groupId>
@@ -212,11 +218,19 @@
       <dependency>
          <groupId>org.jboss</groupId>
          <artifactId>jboss-transaction-spi</artifactId>
-         <version>7.1.0.Final</version>
+         <version>7.6.0.Final</version>
          <exclusions>
             <exclusion>
                <groupId>org.hornetq</groupId>
                <artifactId>hornetq-commons</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.spec.javax.resource</groupId>
+               <artifactId>jboss-connector-api_1.7_spec</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.spec.javax.transaction</groupId>
+               <artifactId>jboss-transaction-api_1.2_spec</artifactId>
             </exclusion>
          </exclusions>
       </dependency>

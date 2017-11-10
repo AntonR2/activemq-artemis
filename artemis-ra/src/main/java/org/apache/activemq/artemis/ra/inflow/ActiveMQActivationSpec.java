@@ -114,11 +114,6 @@ public class ActiveMQActivationSpec extends ConnectionFactoryProperties implemen
     */
    private Integer maxSession;
 
-   /**
-    * Transaction timeout
-    */
-   private Integer transactionTimeout;
-
    private Boolean useJNDI = true;
 
    private String jndiParams = null;
@@ -159,7 +154,6 @@ public class ActiveMQActivationSpec extends ConnectionFactoryProperties implemen
       user = null;
       password = null;
       maxSession = DEFAULT_MAX_SESSION;
-      transactionTimeout = 0;
    }
 
    /**
@@ -606,32 +600,6 @@ public class ActiveMQActivationSpec extends ConnectionFactoryProperties implemen
       maxSession = value;
    }
 
-   /**
-    * Get the transaction timeout
-    *
-    * @return The value
-    */
-   public Integer getTransactionTimeout() {
-      if (logger.isTraceEnabled()) {
-         logger.trace("getTransactionTimeout()");
-      }
-
-      return transactionTimeout;
-   }
-
-   /**
-    * Set the transaction timeout
-    *
-    * @param value The value
-    */
-   public void setTransactionTimeout(final Integer value) {
-      if (logger.isTraceEnabled()) {
-         logger.trace("setTransactionTimeout(" + value + ")");
-      }
-
-      transactionTimeout = value;
-   }
-
    public Boolean isUseLocalTx() {
       if (localTx == null) {
          return ra.getUseLocalTx();
@@ -887,8 +855,6 @@ public class ActiveMQActivationSpec extends ConnectionFactoryProperties implemen
          return false;
       if (maxSession != null ? !maxSession.equals(that.maxSession) : that.maxSession != null)
          return false;
-      if (transactionTimeout != null ? !transactionTimeout.equals(that.transactionTimeout) : that.transactionTimeout != null)
-         return false;
       if (useJNDI != null ? !useJNDI.equals(that.useJNDI) : that.useJNDI != null)
          return false;
       if (jndiParams != null ? !jndiParams.equals(that.jndiParams) : that.jndiParams != null)
@@ -926,7 +892,6 @@ public class ActiveMQActivationSpec extends ConnectionFactoryProperties implemen
       result = 31 * result + (user != null ? user.hashCode() : 0);
       result = 31 * result + (password != null ? password.hashCode() : 0);
       result = 31 * result + (maxSession != null ? maxSession.hashCode() : 0);
-      result = 31 * result + (transactionTimeout != null ? transactionTimeout.hashCode() : 0);
       result = 31 * result + (useJNDI != null ? useJNDI.hashCode() : 0);
       result = 31 * result + (jndiParams != null ? jndiParams.hashCode() : 0);
       result = 31 * result + (parsedJndiParams != null ? parsedJndiParams.hashCode() : 0);

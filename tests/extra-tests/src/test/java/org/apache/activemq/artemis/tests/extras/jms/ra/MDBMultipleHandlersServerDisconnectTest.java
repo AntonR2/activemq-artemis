@@ -128,9 +128,6 @@ public class MDBMultipleHandlersServerDisconnectTest extends ActiveMQRATestBase 
       resourceAdapter.setReconnectAttempts(-1);
       resourceAdapter.setRetryInterval(100L);
 
-      //      qResourceAdapter.setTransactionManagerLocatorClass(DummyTMLocator.class.getName());
-      //      qResourceAdapter.setTransactionManagerLocatorMethod("getTM");
-
       MyBootstrapContext ctx = new MyBootstrapContext();
 
       qResourceAdapter.setConnectorClassName(NETTY_CONNECTOR_FACTORY);
@@ -140,7 +137,6 @@ public class MDBMultipleHandlersServerDisconnectTest extends ActiveMQRATestBase 
 
       ActiveMQActivationSpec spec = new ActiveMQActivationSpec();
 
-      spec.setTransactionTimeout(1);
       spec.setMaxSession(NUMBER_OF_SESSIONS);
       spec.setSetupAttempts(-1);
       spec.setSetupInterval(100L);

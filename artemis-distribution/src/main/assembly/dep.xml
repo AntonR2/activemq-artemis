@@ -74,7 +74,7 @@
             <!-- dependencies -->
             <include>org.apache.geronimo.specs:geronimo-jms_2.0_spec</include>
             <include>org.apache.geronimo.specs:geronimo-annotation_1.1_spec</include>
-            <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
+            <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.6_spec</include>
             <include>org.apache.geronimo.specs:geronimo-ejb_3.0_spec</include>
             <include>org.apache.geronimo.specs:geronimo-jta_1.1_spec</include>
             <include>org.jboss.logmanager:jboss-logmanager</include>

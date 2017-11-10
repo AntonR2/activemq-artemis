@@ -2,11 +2,11 @@
 
 <!-- $Id: ra.xml 76819 2008-08-08 11:04:20Z jesper.pedersen $ -->
 
-<connector xmlns="http://java.sun.com/xml/ns/j2ee"
+<connector xmlns="http://java.sun.com/xml/ns/javaee"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
-           http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd"
-           version="1.5">
+           xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+           http://java.sun.com/xml/ns/javaee/connector_1_6.xsd"
+           version="1.6">
 
    <description>ActiveMQ Artemis 2.0 Resource Adapter</description>
    <display-name>ActiveMQ Artemis 2.0 Resource Adapter</display-name>

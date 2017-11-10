@@ -473,7 +473,7 @@ public class ActiveMQActivation {
       ClientSession result = null;
 
       try {
-         result = ra.createSession(cf, spec.getAcknowledgeModeInt(), spec.getUser(), spec.getPassword(), ra.getPreAcknowledge(), ra.getDupsOKBatchSize(), ra.getTransactionBatchSize(), isDeliveryTransacted, spec.isUseLocalTx(), spec.getTransactionTimeout());
+         result = ra.createSession(cf, spec.getAcknowledgeModeInt(), spec.getUser(), spec.getPassword(), ra.getPreAcknowledge(), ra.getDupsOKBatchSize(), ra.getTransactionBatchSize(), isDeliveryTransacted, spec.isUseLocalTx());
 
          result.addMetaData("resource-adapter", "inbound");
          result.addMetaData(ClientSession.JMS_SESSION_IDENTIFIER_PROPERTY, "");

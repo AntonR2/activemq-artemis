@@ -31,6 +31,7 @@ import javax.resource.spi.work.WorkContext;
 import javax.resource.spi.work.WorkException;
 import javax.resource.spi.work.WorkListener;
 import javax.resource.spi.work.WorkManager;
+import javax.transaction.Synchronization;
 import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.xa.XAResource;
 import java.lang.reflect.Method;
@@ -165,6 +166,7 @@ public abstract class ActiveMQRATestBase extends JMSTestBase {
    public class MyBootstrapContext implements BootstrapContext {
 
       WorkManager workManager = new DummyWorkManager();
+      TransactionSynchronizationRegistry tsr = new DummyTransactionSynchronizationRegistry();
 
       @Override
       public Timer createTimer() throws UnavailableException {
@@ -178,7 +180,7 @@ public abstract class ActiveMQRATestBase extends JMSTestBase {
 
       @Override
       public TransactionSynchronizationRegistry getTransactionSynchronizationRegistry() {
-         return null;
+         return tsr;
       }
 
       @Override
@@ -189,6 +191,44 @@ public abstract class ActiveMQRATestBase extends JMSTestBase {
       @Override
       public XATerminator getXATerminator() {
          return null;
+      }
+
+      class DummyTransactionSynchronizationRegistry implements TransactionSynchronizationRegistry {
+
+         @Override
+         public Object getResource(Object key) {
+            return null;
+         }
+
+         @Override
+         public boolean getRollbackOnly() {
+            return false;
+         }
+
+         @Override
+         public Object getTransactionKey() {
+            return null;
+         }
+
+         @Override
+         public int getTransactionStatus() {
+            return 0;
+         }
+
+         @Override
+         public void putResource(Object key, Object value) {
+
+         }
+
+         @Override
+         public void registerInterposedSynchronization(Synchronization sync) {
+
+         }
+
+         @Override
+         public void setRollbackOnly() {
+
+         }
       }
 
       class DummyWorkManager implements WorkManager {
