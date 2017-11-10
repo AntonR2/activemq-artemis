@@ -18,6 +18,7 @@ package org.apache.activemq.artemis.tests.integration.ra;
 
 import javax.jms.JMSContext;
 import javax.jms.JMSRuntimeException;
+import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +30,6 @@ import org.apache.activemq.artemis.ra.ActiveMQRAConnectionFactoryImpl;
 import org.apache.activemq.artemis.ra.ActiveMQRAConnectionManager;
 import org.apache.activemq.artemis.ra.ActiveMQRAManagedConnectionFactory;
 import org.apache.activemq.artemis.ra.ActiveMQResourceAdapter;
-import org.apache.activemq.artemis.service.extensions.ServiceUtils;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +38,7 @@ import org.junit.Test;
 public class JMSContextTest extends ActiveMQRATestBase {
 
    private ActiveMQResourceAdapter resourceAdapter;
+   private MyBootstrapContext ctx;
 
    ActiveMQRAConnectionManager qraConnectionManager = new ActiveMQRAConnectionManager();
    private ActiveMQRAConnectionFactory qraConnectionFactory;
@@ -64,7 +65,7 @@ public class JMSContextTest extends ActiveMQRATestBase {
       resourceAdapter = new ActiveMQResourceAdapter();
 
       resourceAdapter.setConnectorClassName(InVMConnectorFactory.class.getName());
-      MyBootstrapContext ctx = new MyBootstrapContext();
+      ctx = new MyBootstrapContext();
       resourceAdapter.start(ctx);
       ActiveMQRAManagedConnectionFactory mcf = new ActiveMQRAManagedConnectionFactory();
       mcf.setResourceAdapter(resourceAdapter);
@@ -74,7 +75,7 @@ public class JMSContextTest extends ActiveMQRATestBase {
    @Override
    @After
    public void tearDown() throws Exception {
-      DummyTransactionManager.tm.tx = null;
+      ((MyBootstrapContext.DummyTransactionSynchronizationRegistry)ctx.getTransactionSynchronizationRegistry()).setTransactionStatus(Status.STATUS_NO_TRANSACTION);
       if (resourceAdapter != null) {
          resourceAdapter.stop();
       }
@@ -121,7 +122,7 @@ public class JMSContextTest extends ActiveMQRATestBase {
 
    @Test
    public void sessionTransactedTestNoActiveJTATx() throws Exception {
-      ((DummyTransactionManager) ServiceUtils.getTransactionManager()).tx = new DummyTransaction();
+      ((MyBootstrapContext.DummyTransactionSynchronizationRegistry)ctx.getTransactionSynchronizationRegistry()).setTransactionStatus(Status.STATUS_ACTIVE);
       JMSContext context = qraConnectionFactory.createContext(JMSContext.SESSION_TRANSACTED);
       assertEquals(context.getSessionMode(), JMSContext.AUTO_ACKNOWLEDGE);
    }
@@ -138,7 +139,7 @@ public class JMSContextTest extends ActiveMQRATestBase {
 
    @Test
    public void clientAckTestNoActiveJTATx() throws Exception {
-      ((DummyTransactionManager) ServiceUtils.getTransactionManager()).tx = new DummyTransaction();
+      ((MyBootstrapContext.DummyTransactionSynchronizationRegistry)ctx.getTransactionSynchronizationRegistry()).setTransactionStatus(Status.STATUS_ACTIVE);
       JMSContext context = qraConnectionFactory.createContext(JMSContext.CLIENT_ACKNOWLEDGE);
       assertEquals(context.getSessionMode(), JMSContext.AUTO_ACKNOWLEDGE);
    }

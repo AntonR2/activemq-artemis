@@ -46,6 +46,7 @@ import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.transaction.Status;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -135,6 +136,7 @@ public class OutgoingConnectionNoJTATest extends ActiveMQRATestBase {
       setupDLQ(10);
       resourceAdapter = newResourceAdapter();
       MyBootstrapContext ctx = new MyBootstrapContext();
+//      ((MyBootstrapContext.DummyTransactionSynchronizationRegistry)ctx.getTransactionSynchronizationRegistry()).setTransactionStatus(Status.STATUS_ACTIVE);
       resourceAdapter.start(ctx);
       ActiveMQRAManagedConnectionFactory mcf = new ActiveMQRAManagedConnectionFactory();
       mcf.setAllowLocalTransactions(true);

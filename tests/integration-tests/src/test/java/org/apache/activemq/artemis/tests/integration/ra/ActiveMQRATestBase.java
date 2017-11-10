@@ -31,6 +31,7 @@ import javax.resource.spi.work.WorkContext;
 import javax.resource.spi.work.WorkException;
 import javax.resource.spi.work.WorkListener;
 import javax.resource.spi.work.WorkManager;
+import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.xa.XAResource;
@@ -194,6 +195,7 @@ public abstract class ActiveMQRATestBase extends JMSTestBase {
       }
 
       class DummyTransactionSynchronizationRegistry implements TransactionSynchronizationRegistry {
+         private int transactionStatus = Status.STATUS_NO_TRANSACTION;
 
          @Override
          public Object getResource(Object key) {
@@ -210,9 +212,13 @@ public abstract class ActiveMQRATestBase extends JMSTestBase {
             return null;
          }
 
+         public void setTransactionStatus(int transactionStatus) {
+            this.transactionStatus = transactionStatus;
+         }
+
          @Override
          public int getTransactionStatus() {
-            return 0;
+            return transactionStatus;
          }
 
          @Override
