@@ -179,6 +179,10 @@ public abstract class ActiveMQRATestBase extends JMSTestBase {
          return false;
       }
 
+      public void setTransactionSynchronizationRegistry(TransactionSynchronizationRegistry tsr) {
+         this.tsr = tsr;
+      }
+
       @Override
       public TransactionSynchronizationRegistry getTransactionSynchronizationRegistry() {
          return tsr;

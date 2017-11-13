@@ -53,6 +53,7 @@ import java.util.Set;
 public class OutgoingConnectionNoJTATest extends ActiveMQRATestBase {
 
    protected ActiveMQResourceAdapter resourceAdapter;
+   protected MyBootstrapContext ctx;
    protected ActiveMQRAConnectionFactory qraConnectionFactory;
    protected ActiveMQRAManagedConnectionFactory mcf;
    ActiveMQRAConnectionManager qraConnectionManager = new ActiveMQRAConnectionManager();
@@ -80,7 +81,7 @@ public class OutgoingConnectionNoJTATest extends ActiveMQRATestBase {
       resourceAdapter = new ActiveMQResourceAdapter();
       resourceAdapter.setEntries("[\"java://jmsXA\"]");
       resourceAdapter.setConnectorClassName(InVMConnectorFactory.class.getName());
-      MyBootstrapContext ctx = new MyBootstrapContext();
+      ctx = new MyBootstrapContext();
       resourceAdapter.start(ctx);
       mcf = new ActiveMQRAManagedConnectionFactory();
       mcf.setAllowLocalTransactions(true);
@@ -105,6 +106,7 @@ public class OutgoingConnectionNoJTATest extends ActiveMQRATestBase {
       setupDLQ(10);
       resourceAdapter = newResourceAdapter();
       MyBootstrapContext ctx = new MyBootstrapContext();
+      ctx.setTransactionSynchronizationRegistry(null);
       resourceAdapter.start(ctx);
       ActiveMQRAManagedConnectionFactory mcf = new ActiveMQRAManagedConnectionFactory();
       mcf.setAllowLocalTransactions(true);
@@ -136,7 +138,7 @@ public class OutgoingConnectionNoJTATest extends ActiveMQRATestBase {
       setupDLQ(10);
       resourceAdapter = newResourceAdapter();
       MyBootstrapContext ctx = new MyBootstrapContext();
-//      ((MyBootstrapContext.DummyTransactionSynchronizationRegistry)ctx.getTransactionSynchronizationRegistry()).setTransactionStatus(Status.STATUS_ACTIVE);
+      ctx.setTransactionSynchronizationRegistry(null);
       resourceAdapter.start(ctx);
       ActiveMQRAManagedConnectionFactory mcf = new ActiveMQRAManagedConnectionFactory();
       mcf.setAllowLocalTransactions(true);
@@ -168,6 +170,7 @@ public class OutgoingConnectionNoJTATest extends ActiveMQRATestBase {
       setupDLQ(10);
       resourceAdapter = newResourceAdapter();
       MyBootstrapContext ctx = new MyBootstrapContext();
+      ctx.setTransactionSynchronizationRegistry(null);
       resourceAdapter.start(ctx);
       ActiveMQRAManagedConnectionFactory mcf = new ActiveMQRAManagedConnectionFactory();
       mcf.setAllowLocalTransactions(true);
