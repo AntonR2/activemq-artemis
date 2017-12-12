@@ -58,7 +58,8 @@
 
       <security-settings>
          <!--security for example queue-->
-         <security-setting match="exampleQueue">
+         <security-setting match="exampleTopic">
+            <permission roles="guest" type="createAddress"/>
             <permission roles="guest" type="createDurableQueue"/>
             <permission roles="guest" type="deleteDurableQueue"/>
             <permission roles="guest" type="createNonDurableQueue"/>
@@ -67,13 +68,5 @@
             <permission roles="guest" type="send"/>
          </security-setting>
       </security-settings>
-
-   <addresses>
-         <address name="exampleQueue">
-            <anycast>
-               <queue name="exampleQueue"/>
-            </anycast>
-         </address>
-      </addresses>
    </core>
 </configuration>

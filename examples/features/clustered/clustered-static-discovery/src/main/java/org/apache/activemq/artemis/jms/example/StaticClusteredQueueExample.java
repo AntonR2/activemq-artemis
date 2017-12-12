@@ -20,9 +20,9 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
-import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
 
 import org.apache.activemq.artemis.api.jms.ActiveMQJMSClient;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
@@ -47,7 +47,7 @@ public class StaticClusteredQueueExample {
 
       try {
          // Step 2. Use direct instantiation (or JNDI if you like)
-         Queue queue = ActiveMQJMSClient.createQueue("exampleQueue");
+         Topic topic = ActiveMQJMSClient.createTopic("exampleTopic");
 
          // Step 3. new JMS Connection Factory object from JNDI on server 3
          ConnectionFactory cf0 = new ActiveMQConnectionFactory("tcp://localhost:61619");
@@ -60,14 +60,23 @@ public class StaticClusteredQueueExample {
          // Step 6. We create a JMS Connection connection0 which is a connection to server 0
          connection0 = cf0.createConnection();
 
+         final String clientID = "my-client-id";
+
+         connection0.setClientID(clientID);
+
          // Step 7. We create a JMS Connection connection1 which is a connection to server 1
          connection1 = cf0.createConnection();
+         connection1.setClientID(clientID);
 
          // Step 6. We create a JMS Connection connection0 which is a connection to server 2
          connection2 = cf0.createConnection();
+         connection2.setClientID(clientID);
 
          // Step 7. We create a JMS Connection connection1 which is a connection to server 3
          connection3 = cf0.createConnection();
+         connection3.setClientID(clientID);
+
+         final String subscriptionName = "my-subscription";
 
          // Step 8. We create a JMS Session on server 0
          Session session0 = connection0.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -91,18 +100,18 @@ public class StaticClusteredQueueExample {
          connection3.start();
 
          // Step 11. We create JMS MessageConsumer objects on server 0 server 1 server 2 server 3
-         MessageConsumer consumer0 = session0.createConsumer(queue);
+         MessageConsumer subscriber0 = session0.createDurableSubscriber(topic, subscriptionName);
 
-         MessageConsumer consumer1 = session1.createConsumer(queue);
+         MessageConsumer subscriber1 = session1.createDurableSubscriber(topic, subscriptionName);
 
-         MessageConsumer consumer2 = session2.createConsumer(queue);
+         MessageConsumer subscriber2 = session2.createDurableSubscriber(topic, subscriptionName);
 
-         MessageConsumer consumer3 = session3.createConsumer(queue);
+         MessageConsumer subscriber3 = session3.createDurableSubscriber(topic, subscriptionName);
 
          Thread.sleep(2000);
 
          // Step 12. We create a JMS MessageProducer object on server 3
-         MessageProducer producer = session3.createProducer(queue);
+         MessageProducer producer = session3.createProducer(topic);
 
          // Step 13. We send some messages to server 3
 
@@ -129,19 +138,19 @@ public class StaticClusteredQueueExample {
             throw new IllegalStateException();
          }
          for (int i = 0; i < numMessages; i += 4) {
-            TextMessage message0 = (TextMessage) consumer0.receive(5000);
+            TextMessage message0 = (TextMessage) subscriber0.receive(5000);
 
             System.out.println("Got message: " + message0.getText() + " from node " + con0Node);
 
-            TextMessage message1 = (TextMessage) consumer1.receive(5000);
+            TextMessage message1 = (TextMessage) subscriber1.receive(5000);
 
             System.out.println("Got message: " + message1.getText() + " from node " + con1Node);
 
-            TextMessage message2 = (TextMessage) consumer2.receive(5000);
+            TextMessage message2 = (TextMessage) subscriber2.receive(5000);
 
             System.out.println("Got message: " + message2.getText() + " from node " + con2Node);
 
-            TextMessage message3 = (TextMessage) consumer3.receive(5000);
+            TextMessage message3 = (TextMessage) subscriber3.receive(5000);
 
             System.out.println("Got message: " + message3.getText() + " from node " + con3Node);
          }
