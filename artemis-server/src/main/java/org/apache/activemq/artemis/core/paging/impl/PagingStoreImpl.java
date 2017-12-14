@@ -388,6 +388,7 @@ public class PagingStoreImpl implements PagingStore {
 
    @Override
    public void start() throws Exception {
+      ActiveMQServerLogger.LOGGER.info("=== Starting PagingStore: " + this);
       lock.writeLock().lock();
 
       try {

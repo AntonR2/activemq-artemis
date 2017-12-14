@@ -1296,6 +1296,16 @@ public class LargeMessageTest extends LargeMessageTestBase {
    }
 
    @Test
+   public void testSendRegularMessagePersistenceConsumerX() throws Exception {
+      for (int i = 0; i < 100; i++) {
+         IntegrationTestLogger.LOGGER.info("\n\n=== Test: " + (i + 1));
+         testSendRegularMessagePersistenceConsumer();
+         tearDown();
+         setUp();
+      }
+   }
+
+   @Test
    public void testSendRegularMessagePersistenceConsumer() throws Exception {
       testChunks(false, false, true, false, true, false, false, true, true, 100, 100, LargeMessageTest.RECEIVE_WAIT_TIME, 0);
    }

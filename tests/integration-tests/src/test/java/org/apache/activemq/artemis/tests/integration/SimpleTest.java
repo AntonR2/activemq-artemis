@@ -19,6 +19,7 @@ package org.apache.activemq.artemis.tests.integration;
 
 import java.util.UUID;
 
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
@@ -83,6 +84,9 @@ public class SimpleTest extends ActiveMQTestBase {
    @Test
    public void simpleTest() throws Exception {
       final String data = "Simple Text " + UUID.randomUUID().toString();
+      final int kilos = 200;
+      final int messageSize = 1024 * kilos;
+      final byte[] bytes = new byte[messageSize];
       final String queueName = "simpleQueue";
       final String addressName = "simpleAddress";
 
@@ -96,7 +100,7 @@ public class SimpleTest extends ActiveMQTestBase {
       ClientMessage message = session.createMessage(false);
 
       // Put some data into the message.
-      message.getBodyBuffer().writeString(data);
+      message.getBodyBuffer().writeBytes(bytes);
 
       // Send the message. This send will be auto-committed based on the way the session was created in setUp()
       producer.send(message);
@@ -116,10 +120,19 @@ public class SimpleTest extends ActiveMQTestBase {
       // Ensure the message was received.
       assertNotNull(message);
 
+      byte[] byteRead = new byte[1024];
+
+      for (int j = 0; j < kilos; j++) {
+         message.getBodyBuffer().readBytes(byteRead);
+      }
+
       // Acknowledge the message.
       message.acknowledge();
 
+      session.commit();
+
       // Ensure the data in the message received matches the data in the message sent.
-      assertEquals(data, message.getBodyBuffer().readString());
+//      assertEquals(data, message.getBodyBuffer().readString());
+      assertEquals(0, server.locateQueue(SimpleString.toSimpleString(queueName)).getMessageCount());
    }
 }
