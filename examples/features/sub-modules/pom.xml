@@ -51,7 +51,7 @@ under the License.
          <modules>
             <module>artemis-ra-rar</module>
             <module>inter-broker-bridge</module>
-            <module>tomcat</module>
+            <!--module>tomcat</module-->
          </modules>
       </profile>
    </profiles>
