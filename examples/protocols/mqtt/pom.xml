@@ -40,6 +40,7 @@ under the License.
       <profile>
          <id>release</id>
          <modules>
+            <module>basic-pubsub2</module>
             <module>clustered-queue-mqtt</module>
             <module>publish-subscribe</module>
          </modules>
@@ -47,6 +48,7 @@ under the License.
       <profile>
          <id>examples</id>
          <modules>
+            <module>basic-pubsub2</module>
             <module>clustered-queue-mqtt</module>
             <module>publish-subscribe</module>
          </modules>
