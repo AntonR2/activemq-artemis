@@ -1,6 +1,7 @@
 sudo: false
 language: java
-script: mvn -Pfast-tests -Pextra-tests -B install
+install: true
+script: mvn -Pfast-tests -B test
 cache:
   directories:
   - $HOME/.m2
