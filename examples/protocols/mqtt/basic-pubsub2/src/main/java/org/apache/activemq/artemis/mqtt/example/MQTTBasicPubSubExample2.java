@@ -55,7 +55,7 @@ public class MQTTBasicPubSubExample2 implements MqttCallback {
       byte[] content = buildContent();
 
       System.out.println("Publish Paho MQTT messages.");
-      for (int idx = 0; idx < 200; idx++) {
+      for (int idx = 0; idx < 500; idx++) {
          MqttMessage msg = new MqttMessage(content);
          publisherClient.mqttClient.publish(topicPaho1, msg);
          System.out.println("Paho MQTT message " + idx + " sent.");
