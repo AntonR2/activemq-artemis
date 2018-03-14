@@ -26,7 +26,6 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.fusesource.mqtt.client.MQTT;
 
 public class MQTTBasicPubSubExample2 implements MqttCallback {
    private MqttAsyncClient mqttClient;
@@ -46,8 +45,6 @@ public class MQTTBasicPubSubExample2 implements MqttCallback {
       consumerClient.connect();
       consumerClient.name = "Consumer";
       System.out.println("Connecting to Artemis using MQTT");
-      MQTT mqtt = new MQTT();
-      mqtt.setHost("tcp://localhost:1883");
 
       System.out.println("Connected to Artemis");
 
@@ -59,7 +56,7 @@ public class MQTTBasicPubSubExample2 implements MqttCallback {
          MqttMessage msg = new MqttMessage(content);
          publisherClient.mqttClient.publish(topicPaho1, msg);
          System.out.println("Paho MQTT message " + idx + " sent.");
-         Thread.sleep(1500);
+         Thread.sleep(500);
       }
 
       System.out.println("PubSubExample complete.");
