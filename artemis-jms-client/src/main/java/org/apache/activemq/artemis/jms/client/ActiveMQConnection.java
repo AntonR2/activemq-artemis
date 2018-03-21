@@ -130,7 +130,7 @@ public class ActiveMQConnection extends ActiveMQConnectionForContextImpl impleme
 
    private ClientSession initialSession;
 
-   private final Exception creationStack;
+   private Exception creationStack;
 
    private ActiveMQConnectionFactory factoryReference;
 
@@ -371,6 +371,8 @@ public class ActiveMQConnection extends ActiveMQConnectionForContextImpl impleme
                return null;
             }
          });
+
+         creationStack = null;
 
          closed = true;
       } catch (ActiveMQException e) {

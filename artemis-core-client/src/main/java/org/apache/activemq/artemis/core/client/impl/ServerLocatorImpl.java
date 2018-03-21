@@ -212,7 +212,7 @@ public final class ServerLocatorImpl implements ServerLocatorInternal, Discovery
 
    private boolean useTopologyForLoadBalancing;
 
-   private final Exception traceException = new Exception();
+   private Exception traceException = new Exception();
 
    // To be called when there are ServerLocator being finalized.
    // To be used on test assertions
@@ -1416,6 +1416,9 @@ public final class ServerLocatorImpl implements ServerLocatorInternal, Discovery
             }
          }
       }
+
+      traceException = null;
+
       synchronized (stateGuard) {
          state = STATE.CLOSED;
       }

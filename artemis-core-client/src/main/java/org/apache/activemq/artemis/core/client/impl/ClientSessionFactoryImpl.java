@@ -138,7 +138,7 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
 
    private volatile boolean closed;
 
-   public final Exception createTrace;
+   public Exception createTrace;
 
    public static final Set<CloseRunnable> CLOSE_RUNNABLES = Collections.synchronizedSet(new HashSet<CloseRunnable>());
 
@@ -457,6 +457,8 @@ public class ClientSessionFactoryImpl implements ClientSessionFactoryInternal, C
       interruptConnectAndCloseAllSessions(true);
 
       serverLocator.factoryClosed(this);
+
+      createTrace = null;
    }
 
    @Override
