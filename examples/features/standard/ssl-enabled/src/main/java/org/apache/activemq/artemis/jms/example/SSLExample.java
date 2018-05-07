@@ -24,6 +24,14 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.naming.InitialContext;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.api.jms.ActiveMQJMSClient;
+import org.apache.activemq.artemis.api.jms.JMSFactoryType;
+import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnectorFactory;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 
 /**
  * A simple JMS Queue example that uses SSL secure transport.
@@ -41,7 +49,23 @@ public class SSLExample {
          Queue queue = (Queue) initialContext.lookup("queue/exampleQueue");
 
          // Step 3. Perform a lookup on the Connection Factory
-         ConnectionFactory cf = (ConnectionFactory) initialContext.lookup("ConnectionFactory");
+         // ConnectionFactory cf = (ConnectionFactory) initialContext.lookup("ConnectionFactory");
+
+         /*
+          * Due to ARTEMIS-1846 the property "activemq.usemaskedpassword" doesn't work in a URL. The work-around is to
+          * create the connection factory programmatically. The following code will programmatically create a connection
+          * factory which is equivalent to the URL:
+          * tcp://localhost:5500?sslEnabled=true&trustStorePath=activemq/server0/activemq.example.truststore&trustStorePassword=66179ddd354243477ee0128e1b0a13b8&activemq.usemaskedpassword=true
+          */
+         Map<String, Object> params = new HashMap<>();
+         params.put("host", "127.0.0.1");
+         params.put("port", 5500);
+         params.put("sslEnabled", true);
+         params.put("activemq.usemaskedpassword", true);
+         params.put("trustStorePath", "activemq/server0/activemq.example.truststore");
+         params.put("trustStorePassword", "66179ddd354243477ee0128e1b0a13b8");
+         TransportConfiguration transport = new TransportConfiguration(NettyConnectorFactory.class.getName(), params);
+         ActiveMQConnectionFactory cf = ActiveMQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transport);
 
          // Step 4.Create a JMS Connection
          connection = cf.createConnection();
