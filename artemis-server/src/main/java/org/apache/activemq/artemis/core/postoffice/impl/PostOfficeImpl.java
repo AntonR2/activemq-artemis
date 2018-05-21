@@ -83,6 +83,7 @@ import org.apache.activemq.artemis.core.transaction.TransactionOperation;
 import org.apache.activemq.artemis.core.transaction.TransactionOperationAbstract;
 import org.apache.activemq.artemis.core.transaction.TransactionPropertyIndexes;
 import org.apache.activemq.artemis.core.transaction.impl.TransactionImpl;
+import org.apache.activemq.artemis.utils.CompositeAddress;
 import org.apache.activemq.artemis.utils.UUIDGenerator;
 import org.apache.activemq.artemis.utils.collections.TypedProperties;
 import org.jboss.logging.Logger;
@@ -989,7 +990,7 @@ public class PostOfficeImpl implements PostOffice, NotificationListener, Binding
 
    // HORNETQ-1029
    private void applyExpiryDelay(Message message, SimpleString address) {
-      long expirationOverride = addressSettingsRepository.getMatch(address.toString()).getExpiryDelay();
+      long expirationOverride = addressSettingsRepository.getMatch(CompositeAddress.extractAddressName(address.toString())).getExpiryDelay();
 
       // A -1 <expiry-delay> means don't do anything
       if (expirationOverride >= 0) {
@@ -1211,7 +1212,7 @@ public class PostOfficeImpl implements PostOffice, NotificationListener, Binding
    // Private -----------------------------------------------------------------
 
    private void setPagingStore(SimpleString address, Message message) throws Exception {
-      PagingStore store = pagingManager.getPageStore(address);
+      PagingStore store = pagingManager.getPageStore(CompositeAddress.extractAddressName(address));
 
       message.setContext(store);
    }

@@ -214,8 +214,10 @@ public abstract class VersionedStompFrameHandler {
 
          connection.sendServerMessage(message, txID);
       } catch (ActiveMQStompException e) {
+         e.printStackTrace();
          response = e.getFrame();
       } catch (Exception e) {
+         e.printStackTrace();
          ActiveMQStompException error = BUNDLE.errorHandleSend(e).setHandler(this);
          response = error.getFrame();
       }

@@ -923,7 +923,7 @@ public class ActiveMQServerImpl implements ActiveMQServer {
          // make an exception for the management address (see HORNETQ-29)
          response = new QueueQueryResult(name, managementAddress, true, false, null, -1, -1, autoCreateQueues, true, false, false, RoutingType.MULTICAST, -1, false, false, null, null, null, null, defaultConsumerWindowSize);
       } else if (autoCreateQueues) {
-         response = new QueueQueryResult(name, name, true, false, null, 0, 0, true, false, false, defaultPurgeOnNoConsumers, RoutingType.MULTICAST, defaultMaxConsumers, defaultExclusiveQueue, defaultLastValueQueue, defaultLastValueKey, defaultNonDestructive, defaultConsumersBeforeDispatch, defaultDelayBeforeDispatch, defaultConsumerWindowSize);
+         response = new QueueQueryResult(name, CompositeAddress.extractAddressName(name), true, false, null, 0, 0, true, false, false, defaultPurgeOnNoConsumers, RoutingType.MULTICAST, defaultMaxConsumers, defaultExclusiveQueue, defaultLastValueQueue, defaultLastValueKey, defaultNonDestructive, defaultConsumersBeforeDispatch, defaultDelayBeforeDispatch, defaultConsumerWindowSize);
       } else {
          response = new QueueQueryResult(null, null, false, false, null, 0, 0, false, false, false, false, RoutingType.MULTICAST, 0, null, null, null, null, null, null, defaultConsumerWindowSize);
       }

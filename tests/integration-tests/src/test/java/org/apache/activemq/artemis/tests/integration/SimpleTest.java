@@ -19,6 +19,8 @@ package org.apache.activemq.artemis.tests.integration;
 
 import java.util.UUID;
 
+import org.apache.activemq.artemis.api.core.RoutingType;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
@@ -26,8 +28,9 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.api.core.RoutingType;
+import org.apache.activemq.artemis.junit.Wait;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
+import org.apache.activemq.artemis.utils.CompositeAddress;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -77,20 +80,22 @@ public class SimpleTest extends ActiveMQTestBase {
        * Create a session from the factory. The call to create the session is surrounded with addClientSession to
        * ensure the session will be cleaned up properly when the test is torn down.
        */
-      session = addClientSession(sf.createSession(false, true, true));
+      session = addClientSession(sf.createSession(true, true, 0));
    }
 
    @Test
    public void simpleTest() throws Exception {
       final String data = "Simple Text " + UUID.randomUUID().toString();
-      final String queueName = "simpleQueue";
+      final String queueName1 = "simpleQueue1";
+      final String queueName2 = "simpleQueue2";
       final String addressName = "simpleAddress";
 
       // Create a queue bound to a particular address where the test will send to & consume from.
-      session.createQueue(addressName, RoutingType.ANYCAST, queueName);
+      session.createQueue(addressName, RoutingType.MULTICAST, queueName1);
+      session.createQueue(addressName, RoutingType.MULTICAST, queueName2);
 
       // Create a producer to send a message to the previously created address.
-      ClientProducer producer = session.createProducer(addressName);
+      ClientProducer producer = session.createProducer(CompositeAddress.toFullQN(addressName, queueName1));
 
       // Create a non-durable message.
       ClientMessage message = session.createMessage(false);
@@ -104,8 +109,11 @@ public class SimpleTest extends ActiveMQTestBase {
       // Close the producer.
       producer.close();
 
+      assertTrue(Wait.waitFor(() -> server.locateQueue(SimpleString.toSimpleString(queueName1)).getMessageCount() == 1, 2000, 100));
+      assertTrue(Wait.waitFor(() -> server.locateQueue(SimpleString.toSimpleString(queueName2)).getMessageCount() == 0, 2000, 100));
+
       // Create a consumer on the queue bound to the address where the message was sent.
-      ClientConsumer consumer = session.createConsumer(queueName);
+      ClientConsumer consumer = session.createConsumer(queueName1);
 
       // Start the session to allow messages to be consumed.
       session.start();
@@ -121,5 +129,8 @@ public class SimpleTest extends ActiveMQTestBase {
 
       // Ensure the data in the message received matches the data in the message sent.
       assertEquals(data, message.getBodyBuffer().readString());
+
+      assertTrue(Wait.waitFor(() -> server.locateQueue(SimpleString.toSimpleString(queueName1)).getMessageCount() == 0, 2000, 100));
+      assertTrue(Wait.waitFor(() -> server.locateQueue(SimpleString.toSimpleString(queueName2)).getMessageCount() == 0, 2000, 100));
    }
 }

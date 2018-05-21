@@ -27,26 +27,24 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+import java.util.Arrays;
+import java.util.Collection;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.RoutingType;
-import org.apache.activemq.artemis.api.core.client.ClientProducer;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.postoffice.Binding;
 import org.apache.activemq.artemis.core.postoffice.Bindings;
 import org.apache.activemq.artemis.core.postoffice.impl.LocalQueueBinding;
 import org.apache.activemq.artemis.core.server.QueueQueryResult;
 import org.apache.activemq.artemis.core.server.impl.AddressInfo;
+import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
+import org.apache.activemq.artemis.junit.Wait;
 import org.apache.activemq.artemis.utils.CompositeAddress;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * Verify FQQN queues work with openwire/artemis JMS API
@@ -56,7 +54,10 @@ public class FQQNOpenWireTest extends OpenWireTestBase {
 
    @Parameterized.Parameters(name = "{0}")
    public static Collection<Object[]> params() {
-      return Arrays.asList(new Object[][]{{"OpenWire"}, {"Artemis"}});
+      return Arrays.asList(new Object[][]{
+//         {"OpenWire"},
+         {"Artemis"}
+      });
    }
 
    private SimpleString anycastAddress = new SimpleString("address.anycast");
@@ -163,9 +164,10 @@ public class FQQNOpenWireTest extends OpenWireTestBase {
    //that it is possible for jms clients to receive from
    //core queues by its FQQN.
    public void testQueue() throws Exception {
-      server.createQueue(anycastAddress, RoutingType.ANYCAST, anycastQ1, null, true, false, -1, false, true);
-      server.createQueue(anycastAddress, RoutingType.ANYCAST, anycastQ2, null, true, false, -1, false, true);
-      server.createQueue(anycastAddress, RoutingType.ANYCAST, anycastQ3, null, true, false, -1, false, true);
+      server.getAddressSettingsRepository().addMatch("#", new AddressSettings().setAutoCreateQueues(true).setAutoCreateAddresses(true));//.setAutoDeleteAddresses(false).setAutoDeleteQueues(false));
+//      server.createQueue(anycastAddress, RoutingType.ANYCAST, anycastQ1, null, true, false, -1, false, true);
+//      server.createQueue(anycastAddress, RoutingType.ANYCAST, anycastQ2, null, true, false, -1, false, true);
+//      server.createQueue(anycastAddress, RoutingType.ANYCAST, anycastQ3, null, true, false, -1, false, true);
 
       Connection connection = factory.createConnection();
       try {
@@ -176,14 +178,24 @@ public class FQQNOpenWireTest extends OpenWireTestBase {
          Queue q2 = session.createQueue(CompositeAddress.toFullQN(anycastAddress, anycastQ2).toString());
          Queue q3 = session.createQueue(CompositeAddress.toFullQN(anycastAddress, anycastQ3).toString());
 
-         //send 3 messages to anycastAddress
-         locator = createNonHALocator(true);
-         ClientSessionFactory cf = createSessionFactory(locator);
-         ClientSession coreSession = cf.createSession();
+         MessageProducer producer1 = session.createProducer(q1);
+         producer1.send(session.createMessage());
+         producer1.send(session.createMessage());
+         assertTrue(Wait.waitFor(() -> server.locateQueue(anycastQ1).getMessageCount() == 2, 2000, 200));
 
-         //send 3 messages
-         ClientProducer coreProducer = coreSession.createProducer(anycastAddress);
-         sendMessages(coreSession, coreProducer, 3);
+         MessageProducer producer2 = session.createProducer(q2);
+         producer2.send(session.createMessage());
+         producer2.send(session.createMessage());
+         producer2.send(session.createMessage());
+         assertTrue(Wait.waitFor(() -> server.locateQueue(anycastQ2).getMessageCount() == 3, 2000, 200));
+
+         MessageProducer producer3 = session.createProducer(q3);
+         producer3.send(session.createMessage());
+         producer3.send(session.createMessage());
+         producer3.send(session.createMessage());
+         producer3.send(session.createMessage());
+         producer3.send(session.createMessage());
+         assertTrue(Wait.waitFor(() -> server.locateQueue(anycastQ3).getMessageCount() == 5, 2000, 200));
 
          System.out.println("Queue is: " + q1);
          MessageConsumer consumer1 = session.createConsumer(q1);
@@ -192,7 +204,16 @@ public class FQQNOpenWireTest extends OpenWireTestBase {
 
          //each consumer receives one
          assertNotNull(consumer1.receive(2000));
+         assertNotNull(consumer1.receive(2000));
+
          assertNotNull(consumer2.receive(2000));
+         assertNotNull(consumer2.receive(2000));
+         assertNotNull(consumer2.receive(2000));
+
+         assertNotNull(consumer3.receive(2000));
+         assertNotNull(consumer3.receive(2000));
+         assertNotNull(consumer3.receive(2000));
+         assertNotNull(consumer3.receive(2000));
          assertNotNull(consumer3.receive(2000));
 
          connection.close();
@@ -200,7 +221,7 @@ public class FQQNOpenWireTest extends OpenWireTestBase {
          for (SimpleString q : new SimpleString[]{anycastQ1, anycastQ2, anycastQ3}) {
             //FQQN query
             QueueQueryResult query = server.queueQuery(CompositeAddress.toFullQN(anycastAddress, q));
-            assertTrue(query.isExists());
+            assertTrue(query.isExists() || query.isAutoCreateQueues());
             assertEquals(anycastAddress, query.getAddress());
             assertEquals(CompositeAddress.toFullQN(anycastAddress, q), query.getName());
             assertEquals(0, query.getMessageCount());

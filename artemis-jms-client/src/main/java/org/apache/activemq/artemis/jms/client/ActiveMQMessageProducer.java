@@ -33,18 +33,18 @@ import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicPublisher;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQInterruptedException;
 import org.apache.activemq.artemis.api.core.ActiveMQQueueExistsException;
+import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.SendAcknowledgementHandler;
-import org.apache.activemq.artemis.api.core.RoutingType;
+import org.apache.activemq.artemis.utils.CompositeAddress;
 import org.apache.activemq.artemis.utils.UUID;
 import org.apache.activemq.artemis.utils.UUIDGenerator;
 
@@ -386,7 +386,7 @@ public class ActiveMQMessageProducer implements MessageProducer, QueueSender, To
          jmsMessage.setJMSTimestamp(0);
       }
 
-      SimpleString address = null;
+      SimpleString compositeAddress = null;
       ClientSession clientSession = session.getCoreSession();
 
       if (destination == null) {
@@ -402,35 +402,37 @@ public class ActiveMQMessageProducer implements MessageProducer, QueueSender, To
             }
          }
 
-         address = destination.getSimpleAddress();
+         compositeAddress = destination.getSimpleAddress();
 
-         if (!connection.containsKnownDestination(address)) {
+         if (!connection.containsKnownDestination(compositeAddress)) {
             try {
-               ClientSession.AddressQuery query = clientSession.addressQuery(address);
+               ClientSession.AddressQuery query = clientSession.addressQuery(compositeAddress);
+               SimpleString address = CompositeAddress.extractAddressName(compositeAddress);
+               SimpleString queue = CompositeAddress.extractQueueName(compositeAddress);
 
                if (!query.isExists()) {
                   if (destination.isQueue() && query.isAutoCreateQueues()) {
                      clientSession.createAddress(address, RoutingType.ANYCAST, true);
                      if (destination.isTemporary()) {
                         // TODO is it right to use the address for the queue name here?
-                        session.createTemporaryQueue(destination, RoutingType.ANYCAST, address, null, query);
+                        session.createTemporaryQueue(destination, RoutingType.ANYCAST, queue, null, query);
                      } else {
-                        session.createQueue(destination, RoutingType.ANYCAST, address, null, true, true, query);
+                        session.createQueue(destination, RoutingType.ANYCAST, queue, null, true, true, query);
                      }
                   } else if (!destination.isQueue() && query.isAutoCreateAddresses()) {
                      clientSession.createAddress(address, RoutingType.MULTICAST, true);
                   } else if ((destination.isQueue() && !query.isAutoCreateQueues()) || (!destination.isQueue() && !query.isAutoCreateAddresses())) {
-                     throw new InvalidDestinationException("Destination " + address + " does not exist");
+                     throw new InvalidDestinationException("Destination " + compositeAddress + " does not exist");
                   }
                } else {
-                  ClientSession.QueueQuery queueQuery = clientSession.queueQuery(address);
+                  ClientSession.QueueQuery queueQuery = clientSession.queueQuery(queue);
                   if (queueQuery.isExists()) {
-                     connection.addKnownDestination(address);
+                     connection.addKnownDestination(compositeAddress);
                   } else if (destination.isQueue() && query.isAutoCreateQueues()) {
                      if (destination.isTemporary()) {
-                        session.createTemporaryQueue(destination, RoutingType.ANYCAST, address, null, query);
+                        session.createTemporaryQueue(destination, RoutingType.ANYCAST, queue, null, query);
                      } else {
-                        session.createQueue(destination, RoutingType.ANYCAST, address, null, true, true, query);
+                        session.createQueue(destination, RoutingType.ANYCAST, queue, null, true, true, query);
                      }
                   }
                }
@@ -513,9 +515,9 @@ public class ActiveMQMessageProducer implements MessageProducer, QueueSender, To
           * so we avoid it if we can.
           */
          if (completionListener != null) {
-            clientProducer.send(address, coreMessage, new CompletionListenerWrapper(completionListener, jmsMessage, this));
+            clientProducer.send(compositeAddress, coreMessage, new CompletionListenerWrapper(completionListener, jmsMessage, this));
          } else {
-            clientProducer.send(address, coreMessage);
+            clientProducer.send(compositeAddress, coreMessage);
          }
       } catch (ActiveMQInterruptedException e) {
          JMSException jmsException = new JMSException(e.getMessage());
@@ -537,7 +539,6 @@ public class ActiveMQMessageProducer implements MessageProducer, QueueSender, To
       }
       session.checkClosed();
    }
-
 
    private static final class CompletionListenerWrapper implements SendAcknowledgementHandler {
 

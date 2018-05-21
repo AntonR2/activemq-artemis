@@ -90,6 +90,10 @@ public class CompositeAddress {
       return new SimpleString(extractQueueName(name.toString()));
    }
 
+   public static SimpleString extractAddressName(SimpleString address) {
+      return new SimpleString(extractAddressName(address.toString()));
+   }
+
    public static String extractAddressName(String address) {
       String[] split = address.split(SEPARATOR);
       return split[0];

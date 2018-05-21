@@ -51,6 +51,7 @@ import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.Acceptor;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
+import org.apache.activemq.artemis.utils.CompositeAddress;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.artemis.utils.ExecutorFactory;
 import org.apache.activemq.artemis.utils.VersionLoader;
@@ -266,7 +267,7 @@ public final class StompConnection implements RemotingConnection {
 
    // TODO this should take a type - send or receive so it knows whether to check the address or the queue
    public void checkDestination(String destination) throws ActiveMQStompException {
-      if (!manager.destinationExists(destination)) {
+      if (!manager.destinationExists(CompositeAddress.extractAddressName(destination))) {
          throw BUNDLE.destinationNotExist(destination).setHandler(frameHandler);
       }
    }
@@ -274,9 +275,9 @@ public final class StompConnection implements RemotingConnection {
    public void autoCreateDestinationIfPossible(String queue, RoutingType routingType) throws ActiveMQStompException {
       try {
          ServerSession session = getSession().getCoreSession();
-         SimpleString simpleQueue = SimpleString.toSimpleString(queue);
+         SimpleString simpleQueue = SimpleString.toSimpleString(CompositeAddress.extractAddressName(queue));
          AddressInfo addressInfo = manager.getServer().getAddressInfo(simpleQueue);
-         AddressSettings addressSettings = manager.getServer().getAddressSettingsRepository().getMatch(queue);
+         AddressSettings addressSettings = manager.getServer().getAddressSettingsRepository().getMatch(simpleQueue.toString());
          RoutingType effectiveAddressRoutingType = routingType == null ? addressSettings.getDefaultAddressRoutingType() : routingType;
          /**
           * If the address doesn't exist then it is created if possible.
@@ -304,6 +305,7 @@ public final class StompConnection implements RemotingConnection {
       } catch (ActiveMQQueueExistsException e) {
          // ignore
       } catch (Exception e) {
+         e.printStackTrace();
          ActiveMQStompProtocolLogger.LOGGER.debug("Exception while auto-creating destination", e);
          throw new ActiveMQStompException(e.getMessage(), e).setHandler(frameHandler);
       }

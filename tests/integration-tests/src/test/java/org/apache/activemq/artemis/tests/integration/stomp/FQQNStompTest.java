@@ -19,11 +19,15 @@ package org.apache.activemq.artemis.tests.integration.stomp;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.jms.ActiveMQJMSClient;
+import org.apache.activemq.artemis.core.server.Queue;
 import org.apache.activemq.artemis.core.server.QueueQueryResult;
 import org.apache.activemq.artemis.tests.integration.stomp.util.ClientStompFrame;
 import org.apache.activemq.artemis.tests.integration.stomp.util.StompClientConnection;
 import org.apache.activemq.artemis.tests.integration.stomp.util.StompClientConnectionFactory;
+import org.apache.activemq.artemis.tests.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,6 +83,94 @@ public class FQQNStompTest extends StompTestBase {
       assertNotNull(frame);
       assertEquals("Hello World!", frame.getBody());
       System.out.println("frame: " + frame);
+      unsubscribe(conn, "sub-01");
+   }
+
+   @Test
+   public void testReceiveFQQN2() throws Exception {
+      final SimpleString myAddress = SimpleString.toSimpleString("myAddress");
+      final SimpleString q1Name = SimpleString.toSimpleString("q1");
+      final SimpleString q2Name = SimpleString.toSimpleString("q2");
+
+      Queue q1 = server.createQueue(myAddress, RoutingType.MULTICAST, q1Name, null, true, false);
+      Queue q2 = server.createQueue(myAddress, RoutingType.MULTICAST, q2Name, null, true, false);
+
+      sendJmsMessage("Hello World!", ActiveMQJMSClient.createTopic(myAddress.toString()));
+      assertTrue(Wait.waitFor(() -> q1.getMessageCount() == 1, 2000, 100));
+      assertTrue(Wait.waitFor(() -> q2.getMessageCount() == 1, 2000, 100));
+
+      conn.connect(defUser, defPass);
+      subscribeQueue(conn, "sub-01", myAddress + "\\c\\c" + q1Name);
+      ClientStompFrame frame = conn.receiveFrame(2000);
+      assertNotNull(frame);
+      assertEquals("Hello World!", frame.getBody());
+      assertTrue(Wait.waitFor(() -> q1.getMessageCount() == 0, 2000, 100));
+      assertTrue(Wait.waitFor(() -> q2.getMessageCount() == 1, 2000, 100));
+
+      unsubscribe(conn, "sub-01");
+   }
+
+   @Test
+   public void testSendFQQNMulticast() throws Exception {
+      final SimpleString myAddress = SimpleString.toSimpleString("myAddress");
+      final SimpleString q1Name = SimpleString.toSimpleString("q1");
+      final SimpleString q2Name = SimpleString.toSimpleString("q2");
+
+      Queue q1 = server.createQueue(myAddress, RoutingType.MULTICAST, q1Name, null, true, false);
+      Queue q2 = server.createQueue(myAddress, RoutingType.MULTICAST, q2Name, null, true, false);
+
+      conn.connect(defUser, defPass);
+      send(conn, myAddress + "\\c\\c" + q1Name, null, "Hello World!");
+
+      assertTrue(Wait.waitFor(() -> q1.getMessageCount() == 1, 2000, 100));
+      assertTrue(Wait.waitFor(() -> q2.getMessageCount() == 0, 2000, 100));
+
+      subscribeQueue(conn, "sub-01", myAddress + "\\c\\c" + q1Name);
+      ClientStompFrame frame = conn.receiveFrame(2000);
+      assertNotNull(frame);
+      assertEquals("Hello World!", frame.getBody());
+      assertTrue(Wait.waitFor(() -> q1.getMessageCount() == 0, 2000, 100));
+      assertTrue(Wait.waitFor(() -> q2.getMessageCount() == 0, 2000, 100));
+
+      unsubscribe(conn, "sub-01");
+   }
+
+   @Test
+   public void testSendFQQNAnycast() throws Exception {
+      final SimpleString myAddress = SimpleString.toSimpleString("myAddress");
+      final SimpleString q1Name = SimpleString.toSimpleString("q1");
+      final SimpleString q2Name = SimpleString.toSimpleString("q2");
+
+      Queue q1 = server.createQueue(myAddress, RoutingType.ANYCAST, q1Name, null, true, false);
+      Queue q2 = server.createQueue(myAddress, RoutingType.ANYCAST, q2Name, null, true, false);
+
+      conn.connect(defUser, defPass);
+      send(conn, myAddress.toString(), null, "Hello World!", false, RoutingType.ANYCAST);
+      assertTrue(Wait.waitFor(() -> q1.getMessageCount() == 1, 2000, 100));
+      send(conn, myAddress.toString(), null, "Hello World!", false, RoutingType.ANYCAST);
+      assertTrue(Wait.waitFor(() -> q2.getMessageCount() == 1, 2000, 100));
+
+      send(conn, myAddress + "\\c\\c" + q1Name, null, "Hello World!", false, RoutingType.ANYCAST);
+      assertTrue(Wait.waitFor(() -> q1.getMessageCount() == 2, 2000, 100));
+      assertTrue(Wait.waitFor(() -> q2.getMessageCount() == 1, 2000, 100));
+
+      send(conn, myAddress + "\\c\\c" + q1Name, null, "Hello World!", false, RoutingType.ANYCAST);
+      assertTrue(Wait.waitFor(() -> q1.getMessageCount() == 3, 2000, 100));
+      assertTrue(Wait.waitFor(() -> q2.getMessageCount() == 1, 2000, 100));
+
+      subscribeQueue(conn, "sub-01", myAddress + "\\c\\c" + q1Name);
+      ClientStompFrame frame = conn.receiveFrame(2000);
+      assertNotNull(frame);
+      assertEquals("Hello World!", frame.getBody());
+      frame = conn.receiveFrame(2000);
+      assertNotNull(frame);
+      assertEquals("Hello World!", frame.getBody());
+      frame = conn.receiveFrame(2000);
+      assertNotNull(frame);
+      assertEquals("Hello World!", frame.getBody());
+      assertTrue(Wait.waitFor(() -> q1.getMessageCount() == 0, 2000, 100));
+      assertTrue(Wait.waitFor(() -> q2.getMessageCount() == 1, 2000, 100));
+
       unsubscribe(conn, "sub-01");
    }
 

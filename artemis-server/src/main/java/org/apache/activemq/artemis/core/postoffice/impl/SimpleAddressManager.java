@@ -107,7 +107,7 @@ public class SimpleAddressManager implements AddressManager {
 
    @Override
    public Bindings getBindingsForRoutingAddress(final SimpleString address) throws Exception {
-      return mappings.get(address);
+      return mappings.get(CompositeAddress.extractAddressName(address));
    }
 
    @Override

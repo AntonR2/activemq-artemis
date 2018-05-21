@@ -70,6 +70,7 @@ import org.apache.activemq.artemis.jms.client.compatible1X.ActiveMQStreamCompati
 import org.apache.activemq.artemis.jms.client.compatible1X.ActiveMQTextCompabileMessage;
 import org.apache.activemq.artemis.selector.filter.FilterException;
 import org.apache.activemq.artemis.selector.impl.SelectorParser;
+import org.apache.activemq.artemis.utils.CompositeAddress;
 import org.apache.activemq.artemis.utils.SelectorTranslator;
 
 /**
@@ -365,18 +366,19 @@ public class ActiveMQSession implements QueueSession, TopicSession {
 
       try {
          ActiveMQDestination jbd = (ActiveMQDestination) destination;
+         SimpleString addressName = CompositeAddress.extractAddressName(jbd.getSimpleAddress());
 
          if (jbd != null) {
-            ClientSession.AddressQuery response = session.addressQuery(jbd.getSimpleAddress());
+            ClientSession.AddressQuery response = session.addressQuery(addressName);
 
             if (!response.isExists()) {
                try {
                   if (jbd.isQueue() && response.isAutoCreateQueues()) {
                      // perhaps just relying on the broker to do it is simplest (i.e. purgeOnNoConsumers)
-                     session.createAddress(jbd.getSimpleAddress(), RoutingType.ANYCAST, true);
+                     session.createAddress(addressName, RoutingType.ANYCAST, true);
                      createQueue(jbd, RoutingType.ANYCAST, jbd.getSimpleAddress(), null, true, true, response);
                   } else if (!jbd.isQueue() && response.isAutoCreateAddresses()) {
-                     session.createAddress(jbd.getSimpleAddress(), RoutingType.MULTICAST, true);
+                     session.createAddress(addressName, RoutingType.MULTICAST, true);
                   } else {
                      throw new InvalidDestinationException("Destination " + jbd.getName() + " does not exist");
                   }
@@ -785,7 +787,7 @@ public class ActiveMQSession implements QueueSession, TopicSession {
 
             if (!response.isExists()) {
                if (response.isAutoCreateAddresses()) {
-                  session.createAddress(dest.getSimpleAddress(), RoutingType.MULTICAST, true);
+                  session.createAddress(CompositeAddress.extractAddressName(dest.getSimpleAddress()), RoutingType.MULTICAST, true);
                } else {
                   throw new InvalidDestinationException("Topic " + dest.getName() + " does not exist");
                }
@@ -1226,8 +1228,8 @@ public class ActiveMQSession implements QueueSession, TopicSession {
       QueueAttributes queueAttributes = destination.getQueueAttributes() == null ? new QueueAttributes() : destination.getQueueAttributes();
       setRequiredQueueAttributesIfNotSet(queueAttributes, addressQuery, routingType, filter, durable);
       session.createQueue(
-              destination.getSimpleAddress(),
-              queueName,
+              CompositeAddress.extractAddressName(destination.getSimpleAddress()),
+              CompositeAddress.extractQueueName(destination.getSimpleAddress()),
               autoCreated,
               queueAttributes);
    }
@@ -1307,7 +1309,6 @@ public class ActiveMQSession implements QueueSession, TopicSession {
          queueAttributes.setPurgeOnNoConsumers(addressQuery.isDefaultPurgeOnNoConsumers());
       }
    }
-
 
    // Inner classes -------------------------------------------------
 

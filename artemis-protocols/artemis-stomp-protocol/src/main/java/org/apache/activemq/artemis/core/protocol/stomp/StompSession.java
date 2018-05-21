@@ -45,6 +45,7 @@ import org.apache.activemq.artemis.core.server.impl.ServerSessionImpl;
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.protocol.SessionCallback;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
+import org.apache.activemq.artemis.utils.CompositeAddress;
 import org.apache.activemq.artemis.utils.ConfigurationHelper;
 import org.apache.activemq.artemis.utils.PendingTask;
 import org.apache.activemq.artemis.utils.UUIDGenerator;
@@ -259,7 +260,7 @@ public class StompSession implements SessionCallback {
       SimpleString selectorSimple = SimpleString.toSimpleString(selector);
       final int receiveCredits = ack.equals(Stomp.Headers.Subscribe.AckModeValues.AUTO) ? -1 : consumerCredits;
 
-      Set<RoutingType> routingTypes = manager.getServer().getAddressInfo(getCoreSession().removePrefix(address)).getRoutingTypes();
+      Set<RoutingType> routingTypes = manager.getServer().getAddressInfo(getCoreSession().removePrefix(CompositeAddress.extractAddressName(queueName))).getRoutingTypes();
       boolean multicast = routingTypes.size() == 1 && routingTypes.contains(RoutingType.MULTICAST);
       if (multicast) {
          // subscribes to a topic
