@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
@@ -568,6 +570,14 @@ public class NettyConnector extends AbstractConnector {
                if (verifyHost) {
                   SSLParameters sslParameters = engine.getSSLParameters();
                   sslParameters.setEndpointIdentificationAlgorithm("HTTPS");
+                  engine.setSSLParameters(sslParameters);
+               }
+
+               if (sniHost != null) {
+                  SSLParameters sslParameters = engine.getSSLParameters();
+                  List sniHostNames = new ArrayList(1);
+                  sniHostNames.add(new SNIHostName(sniHost));
+                  sslParameters.setServerNames(sniHostNames);
                   engine.setSSLParameters(sslParameters);
                }
 
