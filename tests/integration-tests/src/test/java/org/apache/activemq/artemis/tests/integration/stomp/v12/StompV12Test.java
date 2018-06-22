@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.core.protocol.stomp.Stomp;
+import org.apache.activemq.artemis.core.protocol.stomp.StompConnection;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.tests.integration.IntegrationTestLogger;
 import org.apache.activemq.artemis.tests.integration.stomp.StompTestBase;
@@ -44,6 +45,8 @@ import org.apache.activemq.artemis.tests.integration.stomp.util.StompClientConne
 import org.apache.activemq.artemis.tests.integration.stomp.util.StompClientConnectionFactory;
 import org.apache.activemq.artemis.tests.integration.stomp.util.StompClientConnectionV11;
 import org.apache.activemq.artemis.tests.integration.stomp.util.StompClientConnectionV12;
+import org.apache.activemq.artemis.tests.util.Wait;
+import org.jboss.logmanager.Level;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -292,6 +295,32 @@ public class StompV12Test extends StompTestBase {
       unsubscribe(newConn, "a-sub");
 
       newConn.disconnect();
+   }
+
+   @Test
+   public void testWildcardSubscription() throws Exception {
+      //      server.getActiveMQServer().getConfiguration().getWildcardConfiguration().setDelimiter('/');
+
+      StompClientConnectionV12 subscriber = (StompClientConnectionV12) StompClientConnectionFactory.createClientConnection(uri);
+      org.jboss.logmanager.Logger.getLogger(StompConnection.class.getName()).setLevel(Level.DEBUG);
+      final String WILDCARD_DESTINATION = "/queue/test.foo.*";
+      server.getActiveMQServer().getAddressSettingsRepository().addMatch("/queue/test.#", new AddressSettings().setDefaultQueueRoutingType(RoutingType.ANYCAST).setDefaultAddressRoutingType(RoutingType.ANYCAST));
+      subscriber.connect(defUser, defPass);
+      String subId = UUID.randomUUID().toString();
+
+      subscribe(subscriber, subId, Stomp.Headers.Subscribe.AckModeValues.CLIENT_INDIVIDUAL, null, null, WILDCARD_DESTINATION, true);
+
+      assertTrue(Wait.waitFor(() -> server.getActiveMQServer().locateQueue(SimpleString.toSimpleString(WILDCARD_DESTINATION)) != null, 2000, 100));
+      assertTrue(Wait.waitFor(() -> server.getActiveMQServer().getAddressInfo(SimpleString.toSimpleString(WILDCARD_DESTINATION)) != null, 2000, 100));
+
+      unsubscribe(subscriber, subId, true);
+
+      subscriber.disconnect();
+
+      assertTrue(Wait.waitFor(() -> server.getActiveMQServer().locateQueue(SimpleString.toSimpleString(WILDCARD_DESTINATION)) == null, 2000, 100));
+      assertTrue(Wait.waitFor(() -> server.getActiveMQServer().getAddressInfo(SimpleString.toSimpleString(WILDCARD_DESTINATION)) == null, 2000, 100));
+
+      subscriber.disconnect();
    }
 
    @Test
