@@ -64,9 +64,12 @@ public interface AddressControl {
    long getAddressSize() throws Exception;
 
    /**
-    * Returns the sum of messages on queue(s), including messages in delivery.
+    * Returns the number of messages in all the queues bound to this address (includes scheduled, paged, and in-delivery messages).
+    *
+    * DEPRECATED. Use getMessageCount() instead.
     */
-   @Attribute(desc = "the sum of messages on queue(s), including messages in delivery")
+   @Deprecated
+   @Attribute(desc = "number of messages in all the queues bound to this address (includes scheduled, paged, and in-delivery messages)")
    long getNumberOfMessages() throws Exception;
 
    /**
@@ -101,7 +104,10 @@ public interface AddressControl {
    @Attribute(desc = "names of all bindings (both queues and diverts) bound to this address")
    String[] getBindingNames() throws Exception;
 
-   @Attribute(desc = "number of messages added to all the queues for this address")
+   /**
+    * Returns the number of messages in all the queues bound to this address (includes scheduled, paged, and in-delivery messages).
+    */
+   @Attribute(desc = "number of messages in all the queues bound to this address (includes scheduled, paged, and in-delivery messages)")
    long getMessageCount();
 
 

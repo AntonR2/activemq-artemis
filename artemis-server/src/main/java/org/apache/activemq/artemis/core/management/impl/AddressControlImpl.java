@@ -20,7 +20,6 @@ import javax.json.JsonArrayBuilder;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanOperationInfo;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +30,6 @@ import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.management.AddressControl;
-import org.apache.activemq.artemis.api.core.management.QueueControl;
-import org.apache.activemq.artemis.api.core.management.ResourceNames;
 import org.apache.activemq.artemis.core.message.impl.CoreMessage;
 import org.apache.activemq.artemis.core.paging.PagingManager;
 import org.apache.activemq.artemis.core.paging.PagingStore;
@@ -217,23 +214,10 @@ public class AddressControlImpl extends AbstractControl implements AddressContro
       }
    }
 
+   @Deprecated
    @Override
    public long getNumberOfMessages() throws Exception {
-      clearIO();
-      long totalMsgs = 0;
-      try {
-         Bindings bindings = postOffice.getBindingsForAddress(addressInfo.getName());
-         for (Binding binding : bindings.getBindings()) {
-            if (binding instanceof QueueBinding) {
-               totalMsgs += ((QueueBinding) binding).getQueue().getMessageCount();
-            }
-         }
-         return totalMsgs;
-      } catch (Throwable t) {
-         throw new IllegalStateException(t.getMessage());
-      } finally {
-         blockOnIO();
-      }
+      return getMessageCount();
    }
 
    @Override
@@ -264,7 +248,21 @@ public class AddressControlImpl extends AbstractControl implements AddressContro
 
    @Override
    public long getMessageCount() {
-      return getMessageCount(DurabilityType.ALL);
+      clearIO();
+      long totalMsgs = 0;
+      try {
+         Bindings bindings = postOffice.getBindingsForAddress(addressInfo.getName());
+         for (Binding binding : bindings.getBindings()) {
+            if (binding instanceof QueueBinding) {
+               totalMsgs += ((QueueBinding) binding).getQueue().getMessageCount();
+            }
+         }
+         return totalMsgs;
+      } catch (Throwable t) {
+         throw new IllegalStateException(t.getMessage());
+      } finally {
+         blockOnIO();
+      }
    }
 
 
@@ -332,39 +330,5 @@ public class AddressControlImpl extends AbstractControl implements AddressContro
 
    // Private -------------------------------------------------------
 
-   private long getMessageCount(final DurabilityType durability) {
-      List<QueueControl> queues = getQueues(durability);
-      long count = 0;
-      for (QueueControl queue : queues) {
-         count += queue.getMessageCount();
-      }
-      return count;
-   }
-
-   private List<QueueControl> getQueues(final DurabilityType durability) {
-      try {
-         List<QueueControl> matchingQueues = new ArrayList<>();
-         String[] queues = getQueueNames();
-         for (String queue : queues) {
-            QueueControl coreQueueControl = (QueueControl) managementService.getResource(ResourceNames.QUEUE + queue);
-
-            // Ignore the "special" subscription
-            if (coreQueueControl != null) {
-               if (durability == DurabilityType.ALL || durability == DurabilityType.DURABLE && coreQueueControl.isDurable() ||
-                     durability == DurabilityType.NON_DURABLE && !coreQueueControl.isDurable()) {
-                  matchingQueues.add(coreQueueControl);
-               }
-            }
-         }
-         return matchingQueues;
-      } catch (Exception e) {
-         return Collections.emptyList();
-      }
-   }
-
    // Inner classes -------------------------------------------------
-
-   private enum DurabilityType {
-      ALL, DURABLE, NON_DURABLE
-   }
 }
