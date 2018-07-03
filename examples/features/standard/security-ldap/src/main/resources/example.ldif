@@ -20,28 +20,33 @@ dc: activemq
 objectClass: top
 objectClass: domain
 
-dn: uid=bill,dc=activemq,dc=org
+dn: ou=foo,dc=activemq,dc=org
+ou: foo
+objectClass: top
+objectClass: organizationalUnit
+
+dn: uid=bill,ou=foo,dc=activemq,dc=org
 uid: bill
 userPassword: activemq
 objectClass: account
 objectClass: simpleSecurityObject
 objectClass: top
 
-dn: uid=andrew,dc=activemq,dc=org
+dn: uid=andrew,ou=foo,dc=activemq,dc=org
 uid: andrew
 userPassword: activemq1
 objectClass: account
 objectClass: simpleSecurityObject
 objectClass: top
 
-dn: uid=frank,dc=activemq,dc=org
+dn: uid=frank,ou=foo,dc=activemq,dc=org
 uid: frank
 userPassword: activemq2
 objectClass: account
 objectClass: simpleSecurityObject
 objectClass: top
 
-dn: uid=sam,dc=activemq,dc=org
+dn: uid=sam,ou=foo,dc=activemq,dc=org
 uid: sam
 userPassword: activemq3
 objectClass: account
@@ -52,30 +57,30 @@ objectClass: top
 ## Define roles ##
 ###################
 
-dn: cn=user,dc=activemq,dc=org
+dn: cn=user,ou=foo,dc=activemq,dc=org
 cn: user
-member: uid=bill,dc=activemq,dc=org
-member: uid=andrew,dc=activemq,dc=org
-member: uid=frank,dc=activemq,dc=org
-member: uid=sam,dc=activemq,dc=org
+member: uid=bill,ou=foo,dc=activemq,dc=org
+member: uid=andrew,ou=foo,dc=activemq,dc=org
+member: uid=frank,ou=foo,dc=activemq,dc=org
+member: uid=sam,ou=foo,dc=activemq,dc=org
 objectClass: groupOfNames
 objectClass: top
 
-dn: cn=europe-user,dc=activemq,dc=org
+dn: cn=europe-user,ou=foo,dc=activemq,dc=org
 cn: europe-user
-member: uid=andrew,dc=activemq,dc=org
+member: uid=andrew,ou=foo,dc=activemq,dc=org
 objectClass: groupOfNames
 objectClass: top
 
-dn: cn=news-user,dc=activemq,dc=org
+dn: cn=news-user,ou=foo,dc=activemq,dc=org
 cn: news-user
-member: uid=frank,dc=activemq,dc=org
-member: uid=sam,dc=activemq,dc=org
+member: uid=frank,ou=foo,dc=activemq,dc=org
+member: uid=sam,ou=foo,dc=activemq,dc=org
 objectClass: groupOfNames
 objectClass: top
 
-dn: cn=us-user,dc=activemq,dc=org
+dn: cn=us-user,ou=foo,dc=activemq,dc=org
 cn: us-user
-member: uid=frank,dc=activemq,dc=org
+member: uid=frank,ou=foo,dc=activemq,dc=org
 objectClass: groupOfNames
 objectClass: top
