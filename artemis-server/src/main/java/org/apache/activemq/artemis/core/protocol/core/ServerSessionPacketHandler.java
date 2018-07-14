@@ -888,7 +888,8 @@ public class ServerSessionPacketHandler implements ChannelHandler {
                                      final Packet response,
                                      final boolean flush,
                                      final boolean closeChannel) {
-      if (confirmPacket != null) {
+      // only confirm if the response is null or not an exception
+      if (confirmPacket != null && (response == null || (response != null && response.getType() != PacketImpl.EXCEPTION))) {
          channel.confirm(confirmPacket);
 
          if (flush) {

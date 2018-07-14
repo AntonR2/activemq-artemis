@@ -642,7 +642,7 @@ public final class ChannelImpl implements Channel {
       }
    }
 
-   public void handleResponse(Packet packet) {
+   public void handleAsyncResponse(Packet packet) {
       if (responseAsyncCache != null && packet.isResponseAsync()) {
          responseAsyncCache.handleResponse(packet);
       }
@@ -700,7 +700,7 @@ public final class ChannelImpl implements Channel {
          if (packet.isResponse()) {
             confirm(packet);
 
-            handleResponse(packet);
+            handleAsyncResponse(packet);
             lock.lock();
 
             try {

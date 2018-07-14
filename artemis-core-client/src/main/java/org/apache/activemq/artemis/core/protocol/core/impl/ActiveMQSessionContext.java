@@ -922,7 +922,7 @@ public class ActiveMQSessionContext extends SessionContext {
                                                          boolean lastChunk,
                                                          byte[] chunk,
                                                          SendAcknowledgementHandler messageHandler) throws ActiveMQException {
-      final boolean requiresResponse = lastChunk || confirmationWindow != -1;
+      final boolean requiresResponse = lastChunk && sendBlocking;
       final SessionSendContinuationMessage chunkPacket;
       if (sessionChannel.getConnection().isVersionBeforeAsyncResponseChange()) {
          chunkPacket = new SessionSendContinuationMessage(msgI, chunk, !lastChunk, requiresResponse, messageBodySize, messageHandler);
@@ -945,11 +945,7 @@ public class ActiveMQSessionContext extends SessionContext {
          }
          if (requiresResponse) {
             // When sending it blocking, only the last chunk will be blocking.
-            if (sendBlocking) {
-               channel.sendBlocking(chunkPacket, PacketImpl.NULL_RESPONSE);
-            } else {
-               channel.send(chunkPacket);
-            }
+            channel.sendBlocking(chunkPacket, PacketImpl.NULL_RESPONSE);
          } else {
             channel.send(chunkPacket);
          }

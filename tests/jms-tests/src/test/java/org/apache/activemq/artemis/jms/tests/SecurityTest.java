@@ -18,6 +18,7 @@ package org.apache.activemq.artemis.jms.tests;
 
 import static org.junit.Assert.fail;
 
+import javax.jms.BytesMessage;
 import javax.jms.CompletionListener;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -190,7 +191,9 @@ public class SecurityTest extends JMSTestCase {
    @Test
    public void testLoginValidUserAndPasswordButNotAuthorisedToSend() throws Exception {
       SimpleString queueName = SimpleString.toSimpleString("guest.cannot.send");
-      getJmsServer().createQueue(queueName, RoutingType.ANYCAST, queueName, null, true, false);
+      if (getJmsServer().locateQueue(queueName) == null) {
+         getJmsServer().createQueue(queueName, RoutingType.ANYCAST, queueName, null, true, false);
+      }
       ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
       Connection connection = connectionFactory.createConnection("guest", "guest");
       Session session = connection.createSession();
@@ -213,7 +216,9 @@ public class SecurityTest extends JMSTestCase {
    @Test
    public void testLoginValidUserAndPasswordButNotAuthorisedToSendNonPersistent() throws Exception {
       SimpleString queueName = SimpleString.toSimpleString("guest.cannot.send");
-      getJmsServer().createQueue(queueName, RoutingType.ANYCAST, queueName, null, true, false);
+      if (getJmsServer().locateQueue(queueName) == null) {
+         getJmsServer().createQueue(queueName, RoutingType.ANYCAST, queueName, null, true, false);
+      }
       ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
       connectionFactory.setConfirmationWindowSize(100);
       connectionFactory.setBlockOnDurableSend(false);
@@ -228,6 +233,58 @@ public class SecurityTest extends JMSTestCase {
 
          CountDownLatch countDownLatch = new CountDownLatch(1);
          messageProducer.send(session.createTextMessage("hello"), new CompletionListener() {
+            @Override
+            public void onCompletion(Message message) {
+               JmsTestLogger.LOGGER.info("=== COMPLETED?!?! " + message, new Exception());
+               countDownLatch.countDown();
+            }
+
+            @Override
+            public void onException(Message message, Exception exception) {
+               e.set(exception);
+               countDownLatch.countDown();
+            }
+         });
+         countDownLatch.await(10, TimeUnit.SECONDS);
+         if (e.get() != null) {
+            throw e.get();
+         }
+         fail("JMSSecurityException expected as guest is not allowed to send");
+      } catch (JMSSecurityException activeMQSecurityException) {
+         activeMQSecurityException.printStackTrace();
+      } finally {
+         connection.close();
+      }
+   }
+
+   /**
+    * Login with valid user and password
+    * But try send to address not authorised - Non Persistent.
+    * Should have same behaviour as Persistent with exception on send.
+    */
+   @Test
+   public void testLoginValidUserAndPasswordButNotAuthorisedToSendLargeNonPersistent() throws Exception {
+      SimpleString queueName = SimpleString.toSimpleString("guest.cannot.send");
+      if (getJmsServer().locateQueue(queueName) == null) {
+         getJmsServer().createQueue(queueName, RoutingType.ANYCAST, queueName, null, true, false);
+      }
+      ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+      connectionFactory.setConfirmationWindowSize(100);
+      connectionFactory.setBlockOnDurableSend(false);
+      connectionFactory.setBlockOnNonDurableSend(false);
+      connectionFactory.setMinLargeMessageSize(1024);
+      Connection connection = connectionFactory.createConnection("guest", "guest");
+      Session session = connection.createSession();
+      Destination destination = session.createQueue(queueName.toString());
+      MessageProducer messageProducer = session.createProducer(destination);
+      messageProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+      try {
+         AtomicReference<Exception> e = new AtomicReference<>();
+
+         CountDownLatch countDownLatch = new CountDownLatch(1);
+         BytesMessage message = session.createBytesMessage();
+         message.writeBytes(new byte[10 * 1024]);
+         messageProducer.send(message, new CompletionListener() {
             @Override
             public void onCompletion(Message message) {
                countDownLatch.countDown();
