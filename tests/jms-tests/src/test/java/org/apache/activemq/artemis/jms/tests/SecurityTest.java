@@ -25,6 +25,8 @@ import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
+import javax.jms.JMSContext;
+import javax.jms.JMSProducer;
 import javax.jms.JMSSecurityException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -235,7 +237,6 @@ public class SecurityTest extends JMSTestCase {
          messageProducer.send(session.createTextMessage("hello"), new CompletionListener() {
             @Override
             public void onCompletion(Message message) {
-               JmsTestLogger.LOGGER.info("=== COMPLETED?!?! " + message, new Exception());
                countDownLatch.countDown();
             }
 
@@ -254,6 +255,54 @@ public class SecurityTest extends JMSTestCase {
          activeMQSecurityException.printStackTrace();
       } finally {
          connection.close();
+      }
+   }
+
+   /**
+    * Login with valid user and password
+    * But try send to address not authorised - Non Persistent.
+    * Should have same behaviour as Persistent with exception on send.
+    */
+   @Test
+   public void testLoginValidUserAndPasswordButNotAuthorisedToSendNonPersistentJMS2() throws Exception {
+      SimpleString queueName = SimpleString.toSimpleString("guest.cannot.send");
+      if (getJmsServer().locateQueue(queueName) == null) {
+         getJmsServer().createQueue(queueName, RoutingType.ANYCAST, queueName, null, true, false);
+      }
+      ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+      connectionFactory.setConfirmationWindowSize(100);
+      connectionFactory.setBlockOnDurableSend(false);
+      connectionFactory.setBlockOnNonDurableSend(false);
+      JMSContext context = connectionFactory.createContext("guest", "guest");
+      Destination destination = context.createQueue(queueName.toString());
+      JMSProducer messageProducer = context.createProducer();
+      messageProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+      try {
+         AtomicReference<Exception> e = new AtomicReference<>();
+
+         CountDownLatch countDownLatch = new CountDownLatch(1);
+         messageProducer.setAsync(new CompletionListener() {
+            @Override
+            public void onCompletion(Message message) {
+               countDownLatch.countDown();
+            }
+
+            @Override
+            public void onException(Message message, Exception exception) {
+               e.set(exception);
+               countDownLatch.countDown();
+            }
+         });
+         messageProducer.send(destination, context.createTextMessage("hello"));
+         countDownLatch.await(10, TimeUnit.SECONDS);
+         if (e.get() != null) {
+            throw e.get();
+         }
+         fail("JMSSecurityException expected as guest is not allowed to send");
+      } catch (JMSSecurityException activeMQSecurityException) {
+         activeMQSecurityException.printStackTrace();
+      } finally {
+         context.close();
       }
    }
 

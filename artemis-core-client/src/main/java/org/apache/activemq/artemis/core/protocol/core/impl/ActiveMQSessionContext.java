@@ -927,7 +927,7 @@ public class ActiveMQSessionContext extends SessionContext {
       if (sessionChannel.getConnection().isVersionBeforeAsyncResponseChange()) {
          chunkPacket = new SessionSendContinuationMessage(msgI, chunk, !lastChunk, requiresResponse, messageBodySize, messageHandler);
       } else {
-         chunkPacket = new SessionSendContinuationMessage_V2(msgI, chunk, !lastChunk, requiresResponse, messageBodySize, messageHandler);
+         chunkPacket = new SessionSendContinuationMessage_V2(msgI, chunk, !lastChunk, requiresResponse || confirmationWindow != -1, messageBodySize, messageHandler);
       }
       final int expectedEncodeSize = chunkPacket.expectedEncodeSize();
       //perform a weak form of flow control to avoid OOM on tight loops
