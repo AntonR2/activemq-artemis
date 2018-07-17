@@ -1110,8 +1110,6 @@ public class ActiveMQServerImpl implements ActiveMQServer {
 
       sessions.clear();
 
-      activateCallbacks.clear();
-
       state = SERVER_STATE.STOPPED;
 
       activationLatch.setCount(1);
@@ -3177,10 +3175,6 @@ public class ActiveMQServerImpl implements ActiveMQServer {
             configuration.setQueueConfigurations(config.getQueueConfigurations());
          }
       }
-   }
-
-   public Set<ActivateCallback> getActivateCallbacks() {
-      return activateCallbacks;
    }
 
    @Override
