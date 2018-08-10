@@ -61,6 +61,7 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSession.AddressQuery;
 import org.apache.activemq.artemis.api.core.client.ClientSession.QueueQuery;
 import org.apache.activemq.artemis.api.core.RoutingType;
+import org.apache.activemq.artemis.core.protocol.core.impl.PacketImpl;
 import org.apache.activemq.artemis.selector.filter.FilterException;
 import org.apache.activemq.artemis.selector.impl.SelectorParser;
 import org.apache.activemq.artemis.utils.SelectorTranslator;
@@ -1133,12 +1134,17 @@ public class ActiveMQSession implements QueueSession, TopicSession {
    }
 
    private ActiveMQQueue lookupQueue(final String queueName, boolean isTemporary) throws ActiveMQException {
+      String queueNameToUse = queueName;
+      if (session.getVersion() < PacketImpl.ADDRESSING_CHANGE_VERSION) {
+         queueNameToUse = (isTemporary ? PacketImpl.OLD_TEMP_QUEUE_PREFIX.toString() : PacketImpl.OLD_QUEUE_PREFIX.toString()) + queueName;
+      }
+
       ActiveMQQueue queue;
 
       if (isTemporary) {
-         queue = ActiveMQDestination.createTemporaryQueue(queueName);
+         queue = ActiveMQDestination.createTemporaryQueue(queueNameToUse);
       } else {
-         queue = ActiveMQDestination.createQueue(queueName);
+         queue = ActiveMQDestination.createQueue(queueNameToUse);
       }
 
       QueueQuery response = session.queueQuery(queue.getSimpleAddress());
@@ -1151,13 +1157,17 @@ public class ActiveMQSession implements QueueSession, TopicSession {
    }
 
    private ActiveMQTopic lookupTopic(final String topicName, final boolean isTemporary) throws ActiveMQException {
+      String topicNameToUse = topicName;
+      if (session.getVersion() < PacketImpl.ADDRESSING_CHANGE_VERSION) {
+         topicNameToUse = (isTemporary ? PacketImpl.OLD_TEMP_TOPIC_PREFIX.toString() : PacketImpl.OLD_TOPIC_PREFIX.toString()) + topicName;
+      }
 
       ActiveMQTopic topic;
 
       if (isTemporary) {
-         topic = ActiveMQDestination.createTemporaryTopic(topicName);
+         topic = ActiveMQDestination.createTemporaryTopic(topicNameToUse);
       } else {
-         topic = ActiveMQDestination.createTopic(topicName);
+         topic = ActiveMQDestination.createTopic(topicNameToUse);
       }
 
       AddressQuery query = session.addressQuery(topic.getSimpleAddress());
