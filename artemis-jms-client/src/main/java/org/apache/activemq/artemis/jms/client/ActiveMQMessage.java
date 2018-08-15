@@ -365,7 +365,22 @@ public class ActiveMQMessage implements javax.jms.Message {
          SimpleString repl = MessageUtil.getJMSReplyTo(message);
 
          if (repl != null) {
-            replyTo = ActiveMQDestination.fromPrefixedName(repl.toString());
+            String actualReplyTo = repl.toString();
+
+            // swap the old prefixes for the new ones so the proper destination type gets created
+            if (enable1xPrefixes) {
+               if (repl.startsWith(PacketImpl.OLD_QUEUE_PREFIX)) {
+                  actualReplyTo = QUEUE_QUALIFIED_PREFIX + repl.subSeq(PacketImpl.OLD_QUEUE_PREFIX.length(), repl.length()).toString();
+               } else if (repl.startsWith(PacketImpl.OLD_TEMP_QUEUE_PREFIX)) {
+                  actualReplyTo = TEMP_QUEUE_QUALIFED_PREFIX + repl.subSeq(PacketImpl.OLD_TEMP_QUEUE_PREFIX.length(), repl.length()).toString();
+               } else if (repl.startsWith(PacketImpl.OLD_TOPIC_PREFIX)) {
+                  actualReplyTo = TOPIC_QUALIFIED_PREFIX + repl.subSeq(PacketImpl.OLD_TOPIC_PREFIX.length(), repl.length()).toString();
+               } else if (repl.startsWith(PacketImpl.OLD_TEMP_TOPIC_PREFIX)) {
+                  actualReplyTo = TEMP_TOPIC_QUALIFED_PREFIX + repl.subSeq(PacketImpl.OLD_TEMP_TOPIC_PREFIX.length(), repl.length()).toString();
+               }
+            }
+
+            replyTo = ActiveMQDestination.fromPrefixedName(actualReplyTo);
          }
       }
       return replyTo;
