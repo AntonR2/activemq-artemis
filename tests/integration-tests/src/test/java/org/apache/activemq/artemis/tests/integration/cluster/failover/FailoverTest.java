@@ -58,6 +58,7 @@ import org.apache.activemq.artemis.core.server.cluster.ha.SharedStoreSlavePolicy
 import org.apache.activemq.artemis.core.server.files.FileMoveManager;
 import org.apache.activemq.artemis.core.server.impl.InVMNodeManager;
 import org.apache.activemq.artemis.core.transaction.impl.XidImpl;
+import org.apache.activemq.artemis.jdbc.store.drivers.AbstractJDBCDriver;
 import org.apache.activemq.artemis.jms.client.ActiveMQTextMessage;
 import org.apache.activemq.artemis.tests.integration.IntegrationTestLogger;
 import org.apache.activemq.artemis.tests.integration.cluster.util.TestableServer;
@@ -80,6 +81,7 @@ public class FailoverTest extends FailoverTestBase {
    @Override
    @Before
    public void setUp() throws Exception {
+      org.jboss.logmanager.Logger.getLogger(AbstractJDBCDriver.class.getName()).setLevel(org.jboss.logmanager.Level.TRACE);
       super.setUp();
       locator = getServerLocator();
    }
