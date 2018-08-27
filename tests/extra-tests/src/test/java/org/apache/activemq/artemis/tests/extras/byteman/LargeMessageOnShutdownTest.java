@@ -46,6 +46,7 @@ public class LargeMessageOnShutdownTest extends ActiveMQTestBase {
    private static ActiveMQServer server;
 
    @Before
+   @Override
    public void setUp() throws Exception {
       super.setUp();
 
@@ -55,6 +56,7 @@ public class LargeMessageOnShutdownTest extends ActiveMQTestBase {
    }
 
    @After
+   @Override
    public void tearDown() throws Exception {
       super.tearDown();
       stopServer();
