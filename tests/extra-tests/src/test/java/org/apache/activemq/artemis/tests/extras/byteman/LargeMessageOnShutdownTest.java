@@ -98,8 +98,7 @@ public class LargeMessageOnShutdownTest extends ActiveMQTestBase {
          producer1.send(message);
       } catch (Exception e) {
          // Expected due to shutdown.
-      }
-      finally {
+      } finally {
          csf1.close();
       }
 
