@@ -542,7 +542,7 @@ public class CoreMessage extends RefCountMessage implements ICoreMessage {
    /**
     * I am keeping this synchronized as the decode of the Properties is lazy
     */
-   protected TypedProperties checkProperties() {
+   protected synchronized TypedProperties checkProperties() {
       if (properties == null) {
          TypedProperties properties = new TypedProperties();
          if (buffer != null && propertiesLocation >= 0) {
