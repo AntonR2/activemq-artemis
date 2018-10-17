@@ -16,17 +16,24 @@
  */
 package org.apache.activemq.artemis.core.filter.impl;
 
+import java.nio.charset.Charset;
+
+import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.FilterConstants;
+import org.apache.activemq.artemis.api.core.ICoreMessage;
 import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.core.buffers.impl.ChannelBufferWrapper;
 import org.apache.activemq.artemis.core.filter.Filter;
 import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
+import org.apache.activemq.artemis.reader.TextMessageUtil;
 import org.apache.activemq.artemis.selector.filter.BooleanExpression;
 import org.apache.activemq.artemis.selector.filter.FilterException;
 import org.apache.activemq.artemis.selector.filter.Filterable;
 import org.apache.activemq.artemis.selector.impl.SelectorParser;
+import org.apache.activemq.artemis.utils.UTF8Util;
 
 import static org.apache.activemq.artemis.api.core.FilterConstants.NATIVE_MESSAGE_ID;
 
@@ -109,9 +116,9 @@ public class FilterImpl implements Filter {
          return result;
       } catch (Exception e) {
          ActiveMQServerLogger.LOGGER.invalidFilter(sfilterString);
-         if (ActiveMQServerLogger.LOGGER.isDebugEnabled()) {
-            ActiveMQServerLogger.LOGGER.debug("Invalid filter", e);
-         }
+//         if (ActiveMQServerLogger.LOGGER.isDebugEnabled()) {
+            ActiveMQServerLogger.LOGGER.info("Invalid filter", e);
+//         }
          return false;
       }
    }
@@ -208,8 +215,19 @@ public class FilterImpl implements Filter {
 
       @Override
       public <T> T getBodyAs(Class<T> type) throws FilterException {
-         // TODO: implement to support content based selection
-         return null;
+         T result = null;
+         try {
+            if (String.class.isAssignableFrom(type)) {
+               SimpleString temp = TextMessageUtil.readBodyText(((ICoreMessage)message).getBodyBuffer());
+               if (temp != null) {
+                  result = (T) temp.toString();
+               }
+            }
+         } catch (Exception e) {
+            throw new FilterException(e);
+         }
+
+         return result;
       }
 
       @Override

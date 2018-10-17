@@ -41,6 +41,7 @@ import org.apache.activemq.artemis.core.server.transformer.Transformer;
 import org.apache.activemq.artemis.core.server.impl.ActiveMQServerImpl;
 import org.apache.activemq.artemis.core.server.impl.ServiceRegistryImpl;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
+import org.apache.activemq.artemis.reader.TextMessageUtil;
 import org.apache.activemq.artemis.tests.util.ActiveMQTestBase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -126,6 +127,61 @@ public class DivertTest extends ActiveMQTestBase {
       }
 
       Assert.assertNull(consumer2.receiveImmediate());
+   }
+
+   @Test
+   public void testSimpleDivert() throws Exception {
+      final String testAddress = "testAddress";
+
+      final String forwardAddress = "forwardAddress";
+
+      DivertConfiguration divertConf = new DivertConfiguration().setName("divert1").setRoutingName("divert1").setAddress(testAddress).setForwardingAddress(forwardAddress).setFilterString("XPATH '//ContractedTimeTableMsg/Message'");
+
+      Configuration config = createDefaultInVMConfig().addDivertConfiguration(divertConf);
+
+      ActiveMQServer server = addServer(ActiveMQServers.newActiveMQServer(config, false));
+
+      server.start();
+
+      ServerLocator locator = createInVMNonHALocator();
+
+      ClientSessionFactory sf = createSessionFactory(locator);
+
+      ClientSession session = sf.createSession(false, true, true);
+
+      final SimpleString queueName1 = new SimpleString("queue1");
+
+      final SimpleString queueName2 = new SimpleString("queue2");
+
+      session.createQueue(new SimpleString(forwardAddress), RoutingType.MULTICAST, queueName1, null, false);
+
+      session.createQueue(new SimpleString(testAddress), RoutingType.MULTICAST, queueName2, null, false);
+
+      session.start();
+
+      ClientProducer producer = session.createProducer(new SimpleString(testAddress));
+
+      ClientConsumer consumer1 = session.createConsumer(queueName1);
+
+      ClientMessage message = session.createMessage(false);
+
+//      TextMessageUtil.writeBodyText(message.getBodyBuffer(), SimpleString.toSimpleString("<ContractedTimeTableMsg> <Message type=\"123\"> </Message></ContractedTimeTableMsg>"));
+
+      message.getBodyBuffer().writeNullableSimpleString(SimpleString.toSimpleString("<ContractedTimeTableMsg> <Message type=\"123\"> </Message></ContractedTimeTableMsg>"));
+
+      producer.send(message);
+
+      message = consumer1.receive(DivertTest.TIMEOUT);
+
+      Assert.assertNotNull(message);
+
+      Assert.assertEquals("forwardAddress", message.getAddress());
+
+      Assert.assertEquals("testAddress", message.getStringProperty(Message.HDR_ORIGINAL_ADDRESS));
+
+      message.acknowledge();
+
+      Assert.assertNull(consumer1.receiveImmediate());
    }
 
    @Test

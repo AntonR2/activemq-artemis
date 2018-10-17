@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.core.protocol.stomp.Stomp;
+import org.apache.activemq.artemis.core.protocol.stomp.StompConnection;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.tests.integration.IntegrationTestLogger;
 import org.apache.activemq.artemis.tests.integration.stomp.StompTestBase;
@@ -1449,6 +1450,22 @@ public class StompV12Test extends StompTestBase {
 
       waitDisconnect(conn);
       Assert.assertFalse("Should be disconnected in STOMP 1.2 after ERROR", conn.isConnected());
+   }
+
+   @Test
+   public void testMultipleDurableSubscribers() throws Exception {
+      org.jboss.logmanager.Logger.getLogger(StompConnection.class.getName()).setLevel(org.jboss.logmanager.Level.TRACE);
+      conn.connect(defUser, defPass, "myClientID");
+      StompClientConnectionV12 conn2 = (StompClientConnectionV12) StompClientConnectionFactory.createClientConnection(uri);
+      conn2.connect(defUser, defPass, "myClientID");
+
+      subscribe(conn, UUID.randomUUID().toString(), "client-individual", getName());
+      subscribe(conn2, UUID.randomUUID().toString(), "clientindividual", getName());
+
+      conn.closeTransport();
+      waitDisconnect(conn);
+      conn2.closeTransport();
+      waitDisconnect(conn2);
    }
 
    @Test
