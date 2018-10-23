@@ -1087,6 +1087,7 @@ public class ActiveMQSessionContext extends SessionContext {
             }
          } catch (Exception e) {
             ActiveMQClientLogger.LOGGER.failedToHandlePacket(e);
+            throw new RuntimeException(e);
          }
 
          sessionChannel.confirm(packet);
