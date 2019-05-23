@@ -154,6 +154,7 @@ log-delegate-factory-class-name | **deprecated** the name of the factory class t
 [message-counter-sample-period](management.md#message-counters) | the sample period (in ms) to use for message counters. | 10000
 [message-expiry-scan-period](message-expiry.md#configuring-the-expiry-reaper-thread) | how often (in ms) to scan for expired messages. | 30000
 [message-expiry-thread-priority](message-expiry.md#configuring-the-expiry-reaper-thread)| the priority of the thread expiring messages. | 3
+[metrics-plugin](metrics.md) | [a plugin to export metrics](#metrics-plugin-type) | n/a
 [address-queue-scan-period](address-model.md#configuring-addresses-and-queues-via-address-settings) | how often (in ms) to scan for addresses & queues that should be removed. | 30000
 name | node name; used in topology notifications if set. | n/a
 [password-codec](masking-passwords.md) | the name of the class (and optional configuration properties) used to decode masked passwords. Only valid when `mask-password` is `true`. | n/a
@@ -360,6 +361,36 @@ user | the name of the user to associate with the creation of the queue | n/a
 consumers-before-dispatch | number of consumers required before dispatching messages | 0
 delay-before-dispatch | milliseconds to wait for `consumers-before-dispatch` to be met before dispatching messages anyway | -1 (wait forever)
 
+## prometheus-jmx-exporter type
+
+Name | Description | Default
+---|---|---
+lowercaseOutputName | Lowercase the output metric name. Applies to default format and `name`. | `false`
+lowercaseOutputLabelNames | Lowercase the output metric label names. Applies to default format and `labels`. | `false`
+whitelistObjectNames | A list of [ObjectNames](http://docs.oracle.com/javase/6/docs/api/javax/management/ObjectName.html) to query. | all MBeans
+blacklistObjectNames | A list of [ObjectNames](http://docs.oracle.com/javase/6/docs/api/javax/management/ObjectName.html) to not query. Takes precedence over `whitelistObjectNames`. | none
+rules | A list of rules to apply in order, processing stops at the first matching rule. Attributes that aren't matched aren't collected. | collects everything in the default format.
+
+## rule type
+
+Name | Description | Default
+---|---|---
+pattern | Regex pattern to match against each bean attribute. The pattern is not anchored. Capture groups can be used in other options. | matches everything
+attrNameSnakeCase | Converts the attribute name to snake case. This is seen in the names matched by the pattern and the default format. For example, anAttrName to an\_attr\_name. | `false`
+name | The metric name to set. Capture groups from the `pattern` can be used. If not specified, the default format will be used. If it evaluates to empty, processing of this attribute stops with no output. | empty
+value | Value for the metric. Static values and capture groups from the `pattern` can be used. | scraped MBean value
+valueFactor | Optional number that `value` (or the scraped mBean value if `value` is not specified) is multiplied by, mainly used to convert mBean values from milliseconds to seconds. | `1.0`
+labels | A list of `label` elements | n/a
+help | Help text for the metric. Capture groups from `pattern` can be used. `name` must be set to use this. | the MBean attribute description and the full name of the attribute
+type | The type of the metric, can be `GAUGE`, `COUNTER` or `UNTYPED`. `name` must be set to use this. | `UNTYPED`
+
+## label type
+
+Name | Description | Default
+---|---|---
+name | Capture groups from `pattern` can be used in each. `name` must be set to use this. Empty names are ignored. If not specified and the default format is not being used, no labels are set. | empty
+value | Capture groups from `pattern` can be used in each. `name` must be set to use this. Empty values are ignored. If not specified and the default format is not being used, no labels are set. | empty
+
 
 ## security-setting type
 
@@ -377,6 +408,14 @@ Name | Description
 ---|---
 [property](broker-plugins.md#registering-a-plugin)| properties to configure a plugin
 [class-name](broker-plugins.md#registering-a-plugin) | the name of the broker plugin class to instantiate
+
+
+## metrics-plugin type
+
+Name | Description
+---|---
+[property](metrics.md)| properties to configure a plugin
+[class-name](metrics.md) | the name of the metrics plugin class to instantiate
 
 
 ## resource-limit type

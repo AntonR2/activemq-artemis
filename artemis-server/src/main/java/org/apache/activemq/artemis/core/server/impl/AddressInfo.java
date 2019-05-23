@@ -16,14 +16,17 @@
  */
 package org.apache.activemq.artemis.core.server.impl;
 
-import org.apache.activemq.artemis.api.core.RoutingType;
-import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.utils.CompositeAddress;
-import org.apache.activemq.artemis.utils.PrefixUtil;
-
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+
+import org.apache.activemq.artemis.api.core.RoutingType;
+import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.management.AddressControl;
+import org.apache.activemq.artemis.api.core.management.ResourceNames;
+import org.apache.activemq.artemis.core.server.metrics.MetricsManager;
+import org.apache.activemq.artemis.utils.CompositeAddress;
+import org.apache.activemq.artemis.utils.PrefixUtil;
 
 public class AddressInfo {
 
@@ -191,4 +194,16 @@ public class AddressInfo {
       return unRoutedMessageCountUpdater.get(this);
    }
 
+   public void registerMeters(MetricsManager metricsManager) {
+      if (metricsManager != null) {
+         metricsManager.registerAddressGauge("routed.message.count", name.toString(), this, metrics -> Double.valueOf(getRoutedMessageCount()), AddressControl.ROUTED_MESSAGE_COUNT_DESCRIPTION);
+         metricsManager.registerAddressGauge("unrouted.message.count", name.toString(), this, metrics -> Double.valueOf(getUnRoutedMessageCount()), AddressControl.ROUTED_MESSAGE_COUNT_DESCRIPTION);
+      }
+   }
+
+   public void unregisterMeters(MetricsManager metricsManager) {
+      if (metricsManager != null) {
+         metricsManager.remove(ResourceNames.ADDRESS + name);
+      }
+   }
 }
