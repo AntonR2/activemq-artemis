@@ -135,6 +135,8 @@ public interface Queue extends Bindable,CriticalComponent {
 
    long getConsumerRemovedTimestamp();
 
+   long getRingSize();
+
     /**
     * This will set a reference counter for every consumer present on the queue.
     * The ReferenceCounter will know what to do when the counter became zeroed.
@@ -246,6 +248,8 @@ public interface Queue extends Bindable,CriticalComponent {
    long getMessagesExpired();
 
    long getMessagesKilled();
+
+   long getMessagesReplaced();
 
    MessageReference removeReferenceWithID(long id) throws Exception;
 

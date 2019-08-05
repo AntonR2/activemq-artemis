@@ -518,6 +518,8 @@ public final class ActiveMQDefaultConfiguration {
 
    public static final long DEFAULT_QUEUE_AUTO_DELETE_MESSAGE_COUNT = 0;
 
+   public static final long DEFAULT_RING_SIZE = -1;
+
    public static final int DEFAULT_CONSUMERS_BEFORE_DISPATCH = 0;
 
    public static final long DEFAULT_DELAY_BEFORE_DISPATCH = -1;
@@ -1421,6 +1423,10 @@ public final class ActiveMQDefaultConfiguration {
 
    public static long getDefaultQueueAutoDeleteMessageCount() {
       return DEFAULT_QUEUE_AUTO_DELETE_MESSAGE_COUNT;
+   }
+
+   public static long getDefaultRingSize() {
+      return DEFAULT_RING_SIZE;
    }
 
    public static int getDefaultConsumersBeforeDispatch() {

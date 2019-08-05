@@ -53,6 +53,8 @@ public class MessageReferenceImpl extends LinkedListImpl.Node<MessageReferenceIm
 
    private boolean alreadyAcked;
 
+   private boolean deliveredDirectly;
+
    private Object protocolData;
 
    private Consumer<? super MessageReference> onDelivery;
@@ -197,6 +199,16 @@ public class MessageReferenceImpl extends LinkedListImpl.Node<MessageReferenceIm
    @Override
    public void handled() {
       queue.referenceHandled(this);
+   }
+
+   @Override
+   public void setAlreadyDelivered(boolean deliveredDirectly) {
+      this.deliveredDirectly = deliveredDirectly;
+   }
+
+   @Override
+   public boolean isAlreadyDelivered() {
+      return deliveredDirectly;
    }
 
    @Override

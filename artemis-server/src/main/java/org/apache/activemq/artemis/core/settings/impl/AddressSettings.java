@@ -179,6 +179,8 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
 
    private Long autoDeleteQueuesMessageCount = null;
 
+   private Long defaultRingSize = null;
+
    private DeletionPolicy configDeleteQueues = null;
 
    private Boolean autoCreateAddresses = null;
@@ -343,6 +345,16 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
 
    public AddressSettings setAutoDeleteQueuesDelay(final long autoDeleteQueuesDelay) {
       this.autoDeleteQueuesDelay = autoDeleteQueuesDelay;
+      return this;
+   }
+
+
+   public long getDefaultRingSize() {
+      return defaultRingSize != null ? defaultRingSize : ActiveMQDefaultConfiguration.DEFAULT_RING_SIZE;
+   }
+
+   public AddressSettings setDefaultRingSize(final long defaultRingSize) {
+      this.defaultRingSize = defaultRingSize;
       return this;
    }
 

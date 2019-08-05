@@ -119,6 +119,10 @@ public interface MessageReference {
 
    void handled();
 
+   void setAlreadyDelivered(boolean alreadyDelivered);
+
+   boolean isAlreadyDelivered();
+
    void setAlreadyAcked();
 
    boolean isAlreadyAcked();

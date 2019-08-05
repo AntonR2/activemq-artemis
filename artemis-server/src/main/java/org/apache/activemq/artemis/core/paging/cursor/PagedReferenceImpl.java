@@ -253,6 +253,16 @@ public class PagedReferenceImpl extends LinkedListImpl.Node<PagedReferenceImpl> 
    }
 
    @Override
+   public void setAlreadyDelivered(boolean deliveredDirectly) {
+
+   }
+
+   @Override
+   public boolean isAlreadyDelivered() {
+      return false;
+   }
+
+   @Override
    public void setAlreadyAcked() {
       alreadyAcked = true;
    }

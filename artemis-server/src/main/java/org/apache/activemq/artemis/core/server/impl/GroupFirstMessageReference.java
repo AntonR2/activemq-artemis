@@ -192,6 +192,16 @@ public class GroupFirstMessageReference implements MessageReference {
    }
 
    @Override
+   public void setAlreadyDelivered(boolean deliveredDirectly) {
+
+   }
+
+   @Override
+   public boolean isAlreadyDelivered() {
+      return messageReference.isAlreadyDelivered();
+   }
+
+   @Override
    public void setAlreadyAcked() {
       messageReference.setAlreadyAcked();
    }

@@ -55,7 +55,7 @@ public class ScheduledDeliveryHandlerImpl implements ScheduledDeliveryHandler {
    public ScheduledDeliveryHandlerImpl(final ScheduledExecutorService scheduledExecutor,
          final Queue queue) {
       this.scheduledExecutor = scheduledExecutor;
-      this.metrics = new QueuePendingMessageMetrics(queue);
+      this.metrics = new QueuePendingMessageMetrics(queue, "scheduled");
    }
 
    @Override

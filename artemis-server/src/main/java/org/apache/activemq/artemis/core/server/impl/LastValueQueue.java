@@ -267,6 +267,16 @@ public class LastValueQueue extends QueueImpl {
       }
 
       @Override
+      public void setAlreadyDelivered(boolean alreadyDelivered) {
+         ref.setAlreadyDelivered(alreadyDelivered);
+      }
+
+      @Override
+      public boolean isAlreadyDelivered() {
+         return ref.isAlreadyDelivered();
+      }
+
+      @Override
       public Object getProtocolData() {
          return ref.getProtocolData();
       }

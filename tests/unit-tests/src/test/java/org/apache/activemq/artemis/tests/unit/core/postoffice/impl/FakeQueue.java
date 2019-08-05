@@ -455,6 +455,11 @@ public class FakeQueue extends CriticalComponentImpl implements Queue {
    }
 
    @Override
+   public long getRingSize() {
+      return 0;
+   }
+
+   @Override
    public ReferenceCounter getConsumersRefCount() {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
    }
@@ -546,6 +551,12 @@ public class FakeQueue extends CriticalComponentImpl implements Queue {
 
    @Override
    public long getMessagesKilled() {
+      // no-op
+      return 0;
+   }
+
+   @Override
+   public long getMessagesReplaced() {
       // no-op
       return 0;
    }

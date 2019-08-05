@@ -165,7 +165,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
 
    private volatile boolean queueDestroyed = false;
 
-   private final PageSubscription pageSubscription;
+   protected final PageSubscription pageSubscription;
 
    private ReferenceCounter refCountForConsumers;
 
@@ -179,7 +179,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
    private final ConcurrentLinkedQueue<MessageReference> intermediateMessageReferences = new ConcurrentLinkedQueue<>();
 
    // This is where messages are stored
-   private final PriorityLinkedList<MessageReference> messageReferences = new PriorityLinkedListImpl<>(QueueImpl.NUM_PRIORITIES);
+   protected final PriorityLinkedList<MessageReference> messageReferences = new PriorityLinkedListImpl<>(QueueImpl.NUM_PRIORITIES);
 
    // The quantity of pagedReferences on messageReferences priority list
    private final AtomicInteger pagedReferences = new AtomicInteger(0);
@@ -187,9 +187,9 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
    // The estimate of memory being consumed by this queue. Used to calculate instances of messages to depage
    private final AtomicInteger queueMemorySize = new AtomicInteger(0);
 
-   private final QueuePendingMessageMetrics pendingMetrics = new QueuePendingMessageMetrics(this);
+   protected final QueuePendingMessageMetrics pendingMetrics = new QueuePendingMessageMetrics(this, "pending");
 
-   private final QueuePendingMessageMetrics deliveringMetrics = new QueuePendingMessageMetrics(this);
+   private final QueuePendingMessageMetrics deliveringMetrics = new QueuePendingMessageMetrics(this, "delivering");
 
    protected final ScheduledDeliveryHandler scheduledDeliveryHandler;
 
@@ -587,7 +587,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
 
    @Override
    public boolean allowsReferenceCallback() {
-      // non descructive queues will reuse the same reference between multiple consumers
+      // non destructive queues will reuse the same reference between multiple consumers
       // so you cannot really use the callback from the MessageReference
       return !nonDestructive;
    }
@@ -928,7 +928,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
       directDeliver = false;
 
       if (!ref.isPaged()) {
-         messagesAdded.incrementAndGet();
+         incrementMesssagesAdded();//messagesAdded.incrementAndGet();
       }
    }
 
@@ -996,7 +996,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
       if (scheduledDeliveryHandler.checkAndSchedule(ref, true)) {
          synchronized (this) {
             if (!ref.isPaged()) {
-               messagesAdded.incrementAndGet();
+               incrementMesssagesAdded();//messagesAdded.incrementAndGet();
             }
          }
 
@@ -1295,6 +1295,11 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
    @Override
    public long getConsumerRemovedTimestamp() {
       return consumerRemovedTimestampUpdater.get(this);
+   }
+
+   @Override
+   public long getRingSize() {
+      return -1;
    }
 
    @Override
@@ -1766,6 +1771,11 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
    @Override
    public long getMessagesKilled() {
       return messagesKilled.get();
+   }
+
+   @Override
+   public long getMessagesReplaced() {
+      return messagesReplaced.get();
    }
 
    @Override
@@ -2493,7 +2503,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
          internalAddTail(ref);
 
          if (!ref.isPaged()) {
-            messagesAdded.incrementAndGet();
+            incrementMesssagesAdded();//messagesAdded.incrementAndGet();
          }
 
          if (added++ > MAX_DELIVERIES_IN_LOOP) {
@@ -2623,6 +2633,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
 
 
                   removeMessageReference(holder, ref);
+                  ref.setAlreadyDelivered(true);
                   handledconsumer = consumer;
                   handled++;
                   consumers.reset();
@@ -2730,6 +2741,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
    }
 
    protected void refRemoved(MessageReference ref) {
+//      ActiveMQServerLogger.LOGGER.info("refRemoved", new Exception());
       queueMemorySize.addAndGet(-ref.getMessageMemoryEstimate());
       pendingMetrics.decrementMetrics(ref);
       if (ref.isPaged()) {
@@ -3235,7 +3247,7 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
                   reference = ref;
                }
 
-               messagesAdded.incrementAndGet();
+               incrementMesssagesAdded();//messagesAdded.incrementAndGet();
 
                deliveriesInTransit.countUp();
                proceedDeliver(consumer, reference);

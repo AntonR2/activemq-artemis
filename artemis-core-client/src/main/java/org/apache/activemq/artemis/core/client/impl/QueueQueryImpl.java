@@ -72,6 +72,8 @@ public class QueueQueryImpl implements ClientSession.QueueQuery {
 
    private final Long autoDeleteMessageCount;
 
+   private final Long ringSize;
+
 
    private final Integer defaultConsumerWindowSize;
 
@@ -95,70 +97,7 @@ public class QueueQueryImpl implements ClientSession.QueueQuery {
                          final SimpleString name,
                          final boolean exists,
                          final boolean autoCreateQueues) {
-      this(durable, temporary, consumerCount, messageCount, filterString, address, name, exists, autoCreateQueues, -1, false, false, RoutingType.MULTICAST);
-   }
-
-   public QueueQueryImpl(final boolean durable,
-                         final boolean temporary,
-                         final int consumerCount,
-                         final long messageCount,
-                         final SimpleString filterString,
-                         final SimpleString address,
-                         final SimpleString name,
-                         final boolean exists,
-                         final boolean autoCreateQueues,
-                         final int maxConsumers,
-                         final boolean autoCreated,
-                         final boolean purgeOnNoConsumers,
-                         final RoutingType routingType) {
-      this(durable, temporary, consumerCount, messageCount, filterString, address, name, exists, autoCreateQueues, maxConsumers, autoCreated, purgeOnNoConsumers, routingType, null, null, null);
-   }
-
-   public QueueQueryImpl(final boolean durable,
-                         final boolean temporary,
-                         final int consumerCount,
-                         final long messageCount,
-                         final SimpleString filterString,
-                         final SimpleString address,
-                         final SimpleString name,
-                         final boolean exists,
-                         final boolean autoCreateQueues,
-                         final int maxConsumers,
-                         final boolean autoCreated,
-                         final boolean purgeOnNoConsumers,
-                         final RoutingType routingType,
-                         final Boolean exclusive,
-                         final Boolean lastValue,
-                         final Integer defaultConsumerWindowSize) {
-      this(durable, temporary, consumerCount, messageCount, filterString, address, name, exists, autoCreateQueues, maxConsumers, autoCreated, purgeOnNoConsumers, routingType, exclusive, null, null, lastValue, null, null, null, null, null, null, null, defaultConsumerWindowSize);
-   }
-
-   public QueueQueryImpl(final boolean durable,
-                         final boolean temporary,
-                         final int consumerCount,
-                         final long messageCount,
-                         final SimpleString filterString,
-                         final SimpleString address,
-                         final SimpleString name,
-                         final boolean exists,
-                         final boolean autoCreateQueues,
-                         final int maxConsumers,
-                         final boolean autoCreated,
-                         final boolean purgeOnNoConsumers,
-                         final RoutingType routingType,
-                         final Boolean exclusive,
-                         final Boolean groupRebalance,
-                         final Integer groupBuckets,
-                         final Boolean lastValue,
-                         final SimpleString lastValueKey,
-                         final Boolean nonDestructive,
-                         final Integer consumersBeforeDispatch,
-                         final Long delayBeforeDispatch,
-                         final Boolean autoDelete,
-                         final Long autoDeleteDelay,
-                         final Long autoDeleteMessageCount,
-                         final Integer defaultConsumerWindowSize) {
-      this(durable, temporary, consumerCount, messageCount, filterString, address, name, exists, autoCreateQueues, maxConsumers, autoCreated, purgeOnNoConsumers, routingType, exclusive, groupRebalance, groupBuckets, null, lastValue, lastValueKey, nonDestructive, consumersBeforeDispatch, delayBeforeDispatch, autoDelete, autoDeleteDelay, autoDeleteMessageCount, defaultConsumerWindowSize);
+      this(durable, temporary, consumerCount, messageCount, filterString, address, name, exists, autoCreateQueues, -1, false, false, RoutingType.MULTICAST, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
    }
 
    public QueueQueryImpl(final boolean durable,
@@ -186,7 +125,8 @@ public class QueueQueryImpl implements ClientSession.QueueQuery {
                          final Boolean autoDelete,
                          final Long autoDeleteDelay,
                          final Long autoDeleteMessageCount,
-                         final Integer defaultConsumerWindowSize) {
+                         final Integer defaultConsumerWindowSize,
+                         final Long ringSize) {
       this.durable = durable;
       this.temporary = temporary;
       this.consumerCount = consumerCount;
@@ -213,6 +153,7 @@ public class QueueQueryImpl implements ClientSession.QueueQuery {
       this.autoDeleteDelay = autoDeleteDelay;
       this.autoDeleteMessageCount = autoDeleteMessageCount;
       this.defaultConsumerWindowSize = defaultConsumerWindowSize;
+      this.ringSize = ringSize;
    }
 
    @Override
@@ -343,6 +284,11 @@ public class QueueQueryImpl implements ClientSession.QueueQuery {
    @Override
    public Long getAutoDeleteMessageCount() {
       return autoDeleteMessageCount;
+   }
+
+   @Override
+   public Long getRingSize() {
+      return ringSize;
    }
 }
 
