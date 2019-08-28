@@ -571,6 +571,8 @@ public final class ActiveMQDefaultConfiguration {
 
    public static final long DEFAULT_ANALYZE_CRITICAL_TIMEOUT = 120000;
 
+   public static final long DEFAULT_RETROACTIVE_MESSAGE_COUNT = 0;
+
    public static final CriticalAnalyzerPolicy DEFAULT_ANALYZE_CRITICAL_POLICY = CriticalAnalyzerPolicy.LOG;
 
    /**

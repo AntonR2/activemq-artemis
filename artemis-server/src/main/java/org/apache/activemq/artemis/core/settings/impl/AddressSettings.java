@@ -185,6 +185,8 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
 
    private Long defaultRingSize = null;
 
+   private Long retroactiveMessageCount = null;
+
    private DeletionPolicy configDeleteQueues = null;
 
    private Boolean autoCreateAddresses = null;
@@ -756,6 +758,15 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
 
    public AddressSettings setDefaultRingSize(final long defaultRingSize) {
       this.defaultRingSize = defaultRingSize;
+      return this;
+   }
+
+   public long getRetroactiveMessageCount() {
+      return retroactiveMessageCount != null ? retroactiveMessageCount : ActiveMQDefaultConfiguration.DEFAULT_RETROACTIVE_MESSAGE_COUNT;
+   }
+
+   public AddressSettings setRetroactiveMessageCount(final long defaultRetroactiveMessageCount) {
+      this.retroactiveMessageCount = defaultRetroactiveMessageCount;
       return this;
    }
 

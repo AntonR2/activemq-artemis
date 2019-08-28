@@ -1952,6 +1952,23 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
    private synchronized int iterQueue(final int flushLimit,
                                       final Filter filter1,
                                       QueueIterateAction messageAction) throws Exception {
+      return iterQueue(flushLimit, filter1, messageAction, true);
+   }
+
+   /**
+    * This is a generic method for any method interacting on the Queue to move or delete messages
+    * Instead of duplicate the feature we created an abstract class where you pass the logic for
+    * each message.
+    *
+    * @param filter1
+    * @param messageAction
+    * @return
+    * @throws Exception
+    */
+   private synchronized int iterQueue(final int flushLimit,
+                                      final Filter filter1,
+                                      QueueIterateAction messageAction,
+                                      final boolean remove) throws Exception {
       int count = 0;
       int txCount = 0;
 
@@ -1971,7 +1988,9 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
 
             if (filter1 == null || filter1.match(ref.getMessage())) {
                messageAction.actMessage(tx, ref);
-               iter.remove();
+               if (remove) {
+                  iter.remove();
+               }
                txCount++;
                count++;
             }
@@ -2388,6 +2407,15 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
             moveBetweenSnFQueues(queueSuffix, tx, ref);
          }
       });
+   }
+
+   public synchronized int copyMessages(final SimpleString queue) throws Exception {
+      return iterQueue(DEFAULT_FLUSH_LIMIT, null, new QueueIterateAction() {
+         @Override
+         public void actMessage(Transaction tx, MessageReference ref) throws Exception {
+            copyMessage(queue, tx, ref);
+         }
+      }, false);
    }
 
    @Override
@@ -3136,6 +3164,16 @@ public class QueueImpl extends CriticalComponentImpl implements Queue {
             deliverAsync();
          }
       });
+   }
+
+   private void copyMessage(final SimpleString queue, final Transaction tx, final MessageReference ref) throws Exception {
+      Message copyMessage = makeCopy(ref, false, false);
+      copyMessage.setAddress(server.locateQueue(queue).getAddress());
+      Binding targetBinding = server.getPostOffice().getBinding(queue);
+      RoutingContext routingContext = new RoutingContextImpl(tx);
+      targetBinding.route(copyMessage, routingContext);
+
+      postOffice.processRoute(copyMessage, routingContext, false);
    }
 
    private Pair<String, Binding> locateTargetBinding(SimpleString queueSuffix, Message copyMessage, long oldQueueID) {

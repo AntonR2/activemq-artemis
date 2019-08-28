@@ -42,6 +42,8 @@ import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.management.CoreNotificationType;
 import org.apache.activemq.artemis.api.core.management.ManagementHelper;
 import org.apache.activemq.artemis.api.core.management.NotificationType;
+import org.apache.activemq.artemis.api.core.management.ResourceNames;
+import org.apache.activemq.artemis.core.config.DivertConfiguration;
 import org.apache.activemq.artemis.core.config.WildcardConfiguration;
 import org.apache.activemq.artemis.core.filter.Filter;
 import org.apache.activemq.artemis.core.io.IOCallback;
@@ -63,6 +65,7 @@ import org.apache.activemq.artemis.core.server.ActiveMQMessageBundle;
 import org.apache.activemq.artemis.core.server.ActiveMQScheduledComponent;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
 import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
+import org.apache.activemq.artemis.core.server.ComponentConfigurationRoutingType;
 import org.apache.activemq.artemis.core.server.LargeServerMessage;
 import org.apache.activemq.artemis.core.server.MessageReference;
 import org.apache.activemq.artemis.core.server.Queue;
@@ -78,6 +81,7 @@ import org.apache.activemq.artemis.core.server.management.ManagementService;
 import org.apache.activemq.artemis.core.server.management.Notification;
 import org.apache.activemq.artemis.core.server.management.NotificationListener;
 import org.apache.activemq.artemis.core.settings.HierarchicalRepository;
+import org.apache.activemq.artemis.core.settings.HierarchicalRepositoryChangeListener;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.activemq.artemis.core.transaction.Transaction;
 import org.apache.activemq.artemis.core.transaction.TransactionOperation;
@@ -459,11 +463,95 @@ public class PostOfficeImpl implements PostOffice, NotificationListener, Binding
                if (server.hasBrokerAddressPlugins()) {
                   server.callBrokerAddressPlugins(plugin -> plugin.afterAddAddress(addressInfo, reload));
                }
+               long retroactiveMessageCount = addressSettingsRepository.getMatch(addressInfo.getName().toString()).getRetroactiveMessageCount();
+               if (retroactiveMessageCount > 0) {
+                  createRetroactiveResources(addressInfo.getName(), retroactiveMessageCount, reload);
+               }
+               if (ResourceNames.isRetroactiveResource(server.getConfiguration().getInternalNamingPrefix(), addressInfo.getName(), ResourceNames.ADDRESS)) {
+                  registerRepositoryListenerForRetroactiveAddress(addressInfo.getName());
+               }
             } catch (Exception e) {
                e.printStackTrace();
             }
          }
          return result;
+      }
+   }
+
+   private void registerRepositoryListenerForRetroactiveAddress(SimpleString name) {
+      HierarchicalRepositoryChangeListener repositoryChangeListener = () -> {
+         String prefix = server.getConfiguration().getInternalNamingPrefix();
+         String address = ResourceNames.decomposeRetroactiveResourceName(prefix, name.toString(), ResourceNames.ADDRESS);
+         AddressSettings settings = addressSettingsRepository.getMatch(address);
+         Queue internalQueue = server.locateQueue(ResourceNames.getRetroactiveResourceName(prefix, SimpleString.toSimpleString(address), ResourceNames.QUEUE));
+         if (internalQueue != null && internalQueue.getRingSize() != settings.getRetroactiveMessageCount()) {
+            internalQueue.setRingSize(settings.getRetroactiveMessageCount());
+         }
+      };
+      addressSettingsRepository.registerListener(repositoryChangeListener);
+      server.getAddressInfo(name).setRepositoryChangeListener(repositoryChangeListener);
+   }
+
+   private void createRetroactiveResources(final SimpleString retroactiveAddressName, final long retroactiveMessageCount, final boolean reload) throws Exception {
+      String prefix = server.getConfiguration().getInternalNamingPrefix();
+      final SimpleString internalAddressName = ResourceNames.getRetroactiveResourceName(prefix, retroactiveAddressName, ResourceNames.ADDRESS);
+      final SimpleString internalQueueName = ResourceNames.getRetroactiveResourceName(prefix, retroactiveAddressName, ResourceNames.QUEUE);
+      final SimpleString internalDivertName = ResourceNames.getRetroactiveResourceName(prefix, retroactiveAddressName, ResourceNames.DIVERT);
+
+      if (!reload) {
+         AddressInfo addressInfo = new AddressInfo(internalAddressName).addRoutingType(RoutingType.ANYCAST).setInternal(true);
+         addAddressInfo(addressInfo);
+         server.createQueue(internalAddressName,
+                            RoutingType.ANYCAST,
+                            internalQueueName,
+                            null,
+                            null,
+                            true,
+                            false,
+                            false,
+                            false,
+                            false,
+                            0,
+                            false,
+                            false,
+                            false,
+                            0,
+                            null,
+                            false,
+                            null,
+                            false,
+                            0,
+                            0L,
+                            false,
+                            0L,
+                            0L,
+                            false,
+                            retroactiveMessageCount);
+      }
+      server.deployDivert(new DivertConfiguration()
+                             .setName(internalDivertName.toString())
+                             .setAddress(retroactiveAddressName.toString())
+                             .setExclusive(false)
+                             .setForwardingAddress(internalAddressName.toString())
+                             .setRoutingType(ComponentConfigurationRoutingType.STRIP));
+   }
+
+   private void removeRetroactiveResources(SimpleString address) throws Exception {
+      String prefix = server.getConfiguration().getInternalNamingPrefix();
+
+      SimpleString internalDivertName = ResourceNames.getRetroactiveResourceName(prefix, address, ResourceNames.DIVERT);
+      if (getBinding(internalDivertName) != null) {
+         server.destroyDivert(internalDivertName);
+      }
+
+      SimpleString internalQueueName = ResourceNames.getRetroactiveResourceName(prefix, address, ResourceNames.QUEUE);
+      if (server.locateQueue(internalQueueName) != null) {
+         server.destroyQueue(internalQueueName);
+      }
+
+      SimpleString internalAddressName = ResourceNames.getRetroactiveResourceName(prefix, address, ResourceNames.ADDRESS);
+      if (server.getAddressInfo(internalAddressName) != null) {
+         server.removeAddressInfo(internalAddressName, null);
       }
    }
 
@@ -660,6 +748,7 @@ public class PostOfficeImpl implements PostOffice, NotificationListener, Binding
          }
          managementService.unregisterAddress(address);
          final AddressInfo addressInfo = addressManager.removeAddressInfo(address);
+         removeRetroactiveResources(address);
          if (server.hasBrokerAddressPlugins()) {
             server.callBrokerAddressPlugins(plugin -> plugin.afterRemoveAddress(address, addressInfo));
          }

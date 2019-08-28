@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.artemis.api.core.management;
 
+import org.apache.activemq.artemis.api.core.SimpleString;
+
 /**
  * Helper class used to build resource names used by management messages.
  * <br>
@@ -39,7 +41,20 @@ public final class ResourceNames {
 
    public static final String BROADCAST_GROUP = "broadcastgroup.";
 
+   public static final String RETROACTIVE_SUFFIX = "retro";
+
    private ResourceNames() {
    }
 
+   public static SimpleString getRetroactiveResourceName(String prefix, SimpleString address, String resourceType) {
+      return SimpleString.toSimpleString(prefix.concat(address.toString()).concat(".").concat(resourceType).concat(RETROACTIVE_SUFFIX));
+   }
+
+   public static boolean isRetroactiveResource(String prefix, SimpleString address, String resourceType) {
+      return address.toString().startsWith(prefix) && address.toString().endsWith(resourceType.concat(RETROACTIVE_SUFFIX));
+   }
+
+   public static String decomposeRetroactiveResourceName(String prefix, String address, String resourceType) {
+      return address.substring(address.indexOf(prefix) + prefix.length(), address.indexOf("." + resourceType));
+   }
 }
