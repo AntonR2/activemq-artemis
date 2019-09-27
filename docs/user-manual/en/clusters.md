@@ -369,12 +369,9 @@ group-port from the corresponding `broadcast-group` on the server:
 udp://231.7.7.7:9876
 ```
 
-The element `discovery-group-ref` specifies the name of a discovery
-group defined in `broker.xml`.
-
 Connections created using this URI will be load-balanced across the
-list of servers that the discovery group maintains by listening on
-the multicast address specified in the discovery group configuration.
+list of servers that the embedded discovery group maintains by listening on
+the specified multicast address.
 
 The aforementioned `refreshTimeout` parameter can be set directly in the URI.
 
