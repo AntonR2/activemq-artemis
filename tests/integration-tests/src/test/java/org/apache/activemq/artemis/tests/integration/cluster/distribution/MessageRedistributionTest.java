@@ -1163,6 +1163,60 @@ public class MessageRedistributionTest extends ClusterTestBase {
       session1.close();
    }
 
+   @Test
+   public void testRedistributionWhenConsumerFlipFlops() throws Exception {
+      final int MESSAGE_COUNT = 100;
+      final String ADDRESS = "queues.testaddress";
+      final String QUEUE = "queue0";
+
+      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+
+      startServers(0, 1);
+
+      setupSessionFactory(0, isNetty());
+      setupSessionFactory(1, isNetty());
+
+      createQueue(0, ADDRESS, QUEUE, null, false);
+      createQueue(1, ADDRESS, QUEUE, null, false);
+
+      waitForBindings(0, ADDRESS, 1, 0, true);
+      waitForBindings(1, ADDRESS, 1, 0, true);
+
+      waitForBindings(0, ADDRESS, 1, 0, false);
+      waitForBindings(1, ADDRESS, 1, 0, false);
+
+      send(0, ADDRESS, MESSAGE_COUNT, false, null);
+
+      for (int i = 0; i < MESSAGE_COUNT; i++) {
+         int node = i % 2;
+         addConsumer(0, node, QUEUE, null);
+
+         waitForBindings(0, ADDRESS, 1, node == 0 ? 1 : 0, true);
+         waitForBindings(1, ADDRESS, 1, node == 1 ? 1 : 0, true);
+
+         waitForBindings(0, ADDRESS, 1, node == 1 ? 1 : 0, false);
+         waitForBindings(1, ADDRESS, 1, node == 0 ? 1 : 0, false);
+
+         ClientMessage message = consumers[0].getConsumer().receive(500);
+         Assert.assertNotNull(message);
+         message.acknowledge();
+         consumers[0].getSession().commit();
+         final int finalI = i;
+         Wait.assertTrue(() -> servers[node].locateQueue(SimpleString.toSimpleString(QUEUE)).getMessageCount() == (MESSAGE_COUNT - (finalI + 1)));
+
+         removeConsumer(0);
+
+         waitForBindings(0, ADDRESS, 1, 0, true);
+         waitForBindings(1, ADDRESS, 1, 0, true);
+
+         waitForBindings(0, ADDRESS, 1, 0, false);
+         waitForBindings(1, ADDRESS, 1, 0, false);
+      }
+
+      Wait.assertTrue(() -> servers[0].locateQueue(SimpleString.toSimpleString(QUEUE)).getMessageCount() == 0);
+      Wait.assertTrue(() -> servers[1].locateQueue(SimpleString.toSimpleString(QUEUE)).getMessageCount() == 0);
+   }
+
    protected void setupCluster(final MessageLoadBalancingType messageLoadBalancingType) throws Exception {
       setupClusterConnection("cluster0", "queues", messageLoadBalancingType, 1, isNetty(), 0, 1, 2);
 
