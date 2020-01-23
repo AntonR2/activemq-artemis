@@ -1,11 +1,25 @@
 sudo: false
-language: java
+language: shell
 install: true
 jdk:
   - openjdk8
+os:
+  - linux
+  - windows
 
 # clean out Artemis artifacts from the cache
 before_install:
+- |-
+    case $TRAVIS_OS_NAME in
+      windows)
+        choco install openjdk8
+        export PATH=/C/Progra~1/OpenJDK/openjdk-8u232-b09:$PATH
+        ls /C/Progra~1/OpenJDK/openjdk-8u232-b09
+        export JAVA_HOME=/C/Progra~1/OpenJDK/openjdk-8u232-b09
+        choco install maven
+        export PATH=/C/ProgramData/chocolatey/lib/maven/apache-maven-3.6.3/bin:$PATH
+        ;;
+    esac
 - rm -rf $HOME/.m2/repository/org/apache/activemq/artemis-*
 
 # use 'install' so smoke-tests will work
