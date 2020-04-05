@@ -43,6 +43,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
 import org.apache.activemq.artemis.api.core.BroadcastGroupConfiguration;
 import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
+import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.BridgeConfiguration;
@@ -161,7 +162,7 @@ public class ConfigurationImpl implements Configuration, Serializable {
 
    protected List<FederationConfiguration> federationConfigurations = new ArrayList<>();
 
-   private List<CoreQueueConfiguration> queueConfigurations = new ArrayList<>();
+   private List<QueueConfiguration> queueConfigurations = new ArrayList<>();
 
    private List<CoreAddressConfiguration> addressConfigurations = new ArrayList<>();
 
@@ -716,19 +717,44 @@ public class ConfigurationImpl implements Configuration, Serializable {
       return this;
    }
 
+   @Deprecated
    @Override
    public List<CoreQueueConfiguration> getQueueConfigurations() {
-      return queueConfigurations;
+      List<CoreQueueConfiguration> result = new ArrayList<>();
+      for (QueueConfiguration queueConfiguration : queueConfigurations) {
+         result.add(CoreQueueConfiguration.fromQueueConfiguration(queueConfiguration));
+      }
+      return result;
    }
 
    @Override
-   public ConfigurationImpl setQueueConfigurations(final List<CoreQueueConfiguration> configs) {
+   public List<QueueConfiguration> getQueueConfigs() {
+      return queueConfigurations;
+   }
+
+   @Deprecated
+   @Override
+   public ConfigurationImpl setQueueConfigurations(final List<CoreQueueConfiguration> coreQueueConfigurations) {
+      for (CoreQueueConfiguration coreQueueConfiguration : coreQueueConfigurations) {
+         queueConfigurations.add(coreQueueConfiguration.toQueueConfiguration());
+      }
+      return this;
+   }
+
+   @Override
+   public ConfigurationImpl setQueueConfigs(final List<QueueConfiguration> configs) {
       queueConfigurations = configs;
       return this;
    }
 
    @Override
    public ConfigurationImpl addQueueConfiguration(final CoreQueueConfiguration config) {
+      queueConfigurations.add(config.toQueueConfiguration());
+      return this;
+   }
+
+   @Override
+   public ConfigurationImpl addQueueConfiguration(final QueueConfiguration config) {
       queueConfigurations.add(config);
       return this;
    }

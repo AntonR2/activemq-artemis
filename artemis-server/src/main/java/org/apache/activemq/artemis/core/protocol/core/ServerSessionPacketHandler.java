@@ -28,6 +28,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQInternalErrorException;
 import org.apache.activemq.artemis.api.core.ActiveMQQueueMaxConsumerLimitReached;
 import org.apache.activemq.artemis.api.core.ICoreMessage;
 import org.apache.activemq.artemis.api.core.Message;
+import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
@@ -348,7 +349,12 @@ public class ServerSessionPacketHandler implements ChannelHandler {
                case CREATE_QUEUE: {
                   CreateQueueMessage request = (CreateQueueMessage) packet;
                   requiresResponse = request.isRequiresResponse();
-                  session.createQueue(request.getAddress(), request.getQueueName(), getRoutingTypeFromAddress(request.getAddress()), request.getFilterString(), request.isTemporary(), request.isDurable());
+                  session.createQueue(new QueueConfiguration(request.getQueueName())
+                                         .setAddress(request.getAddress())
+                                         .setRoutingType(getRoutingTypeFromAddress(request.getAddress()))
+                                         .setFilterString(request.getFilterString())
+                                         .setTemporary(request.isTemporary())
+                                         .setDurable(request.isDurable()));
                   if (requiresResponse) {
                      response = createNullResponseMessage(packet);
                   }
@@ -357,9 +363,29 @@ public class ServerSessionPacketHandler implements ChannelHandler {
                case CREATE_QUEUE_V2: {
                   CreateQueueMessage_V2 request = (CreateQueueMessage_V2) packet;
                   requiresResponse = request.isRequiresResponse();
-                  session.createQueue(request.getAddress(), request.getQueueName(), request.getRoutingType(), request.getFilterString(), request.isTemporary(), request.isDurable(), request.getMaxConsumers(), request.isPurgeOnNoConsumers(),
-                                      request.isExclusive(), request.isGroupRebalance(), request.getGroupBuckets(), request.getGroupFirstKey(), request.isLastValue(), request.getLastValueKey(), request.isNonDestructive(), request.getConsumersBeforeDispatch(), request.getDelayBeforeDispatch(),
-                                      request.isAutoDelete(), request.getAutoDeleteDelay(), request.getAutoDeleteMessageCount(), request.isAutoCreated(), request.getRingSize());
+                  session.createQueue(new QueueConfiguration(request.getQueueName())
+                                         .setAddress(request.getAddress())
+                                         .setRoutingType(request.getRoutingType())
+                                         .setFilterString(request.getFilterString())
+                                         .setTemporary(request.isTemporary())
+                                         .setDurable(request.isDurable())
+                                         .setMaxConsumers(request.getMaxConsumers())
+                                         .setPurgeOnNoConsumers(request.isPurgeOnNoConsumers())
+                                         .setExclusive(request.isExclusive())
+                                         .setGroupRebalance(request.isGroupRebalance())
+                                         .setGroupBuckets(request.getGroupBuckets())
+                                         .setGroupFirstKey(request.getGroupFirstKey())
+                                         .setLastValue(request.isLastValue())
+                                         .setLastValueKey(request.getLastValueKey())
+                                         .setNonDestructive(request.isNonDestructive())
+                                         .setConsumersBeforeDispatch(request.getConsumersBeforeDispatch())
+                                         .setDelayBeforeDispatch(request.getDelayBeforeDispatch())
+                                         .setAutoDelete(request.isAutoDelete())
+                                         .setAutoDeleteDelay(request.getAutoDeleteDelay())
+                                         .setAutoDeleteMessageCount(request.getAutoDeleteMessageCount())
+                                         .setAutoCreated(request.isAutoCreated())
+                                         .setRingSize(request.getRingSize()));
+
                   if (requiresResponse) {
                      response = createNullResponseMessage(packet);
                   }
@@ -370,7 +396,10 @@ public class ServerSessionPacketHandler implements ChannelHandler {
                   requiresResponse = request.isRequiresResponse();
                   QueueQueryResult result = session.executeQueueQuery(request.getQueueName());
                   if (!(result.isExists() && Objects.equals(result.getAddress(), request.getAddress()) && Objects.equals(result.getFilterString(), request.getFilterString()))) {
-                     session.createSharedQueue(request.getAddress(), request.getQueueName(), request.isDurable(), request.getFilterString());
+                     session.createSharedQueue(new QueueConfiguration(request.getQueueName())
+                                                  .setAddress(request.getAddress())
+                                                  .setFilterString(request.getFilterString())
+                                                  .setDurable(request.isDurable()));
                   }
                   if (requiresResponse) {
                      response = createNullResponseMessage(packet);
@@ -382,9 +411,25 @@ public class ServerSessionPacketHandler implements ChannelHandler {
                   requiresResponse = request.isRequiresResponse();
                   QueueQueryResult result = session.executeQueueQuery(request.getQueueName());
                   if (!(result.isExists() && Objects.equals(result.getAddress(), request.getAddress()) && Objects.equals(result.getFilterString(), request.getFilterString()))) {
-                     session.createSharedQueue(request.getAddress(), request.getQueueName(), request.getRoutingType(), request.getFilterString(), request.isDurable(), request.getMaxConsumers(), request.isPurgeOnNoConsumers(),
-                                               request.isExclusive(), request.isGroupRebalance(), request.getGroupBuckets(), request.getGroupFirstKey(), request.isLastValue(), request.getLastValueKey(), request.isNonDestructive(), request.getConsumersBeforeDispatch(), request.getDelayBeforeDispatch(),
-                                               request.isAutoDelete(), request.getAutoDeleteDelay(), request.getAutoDeleteMessageCount());
+                     session.createSharedQueue(new QueueConfiguration(request.getQueueName())
+                                                  .setAddress(request.getAddress())
+                                                  .setRoutingType(request.getRoutingType())
+                                                  .setFilterString(request.getFilterString())
+                                                  .setDurable(request.isDurable())
+                                                  .setMaxConsumers(request.getMaxConsumers())
+                                                  .setPurgeOnNoConsumers(request.isPurgeOnNoConsumers())
+                                                  .setExclusive(request.isExclusive())
+                                                  .setGroupRebalance(request.isGroupRebalance())
+                                                  .setGroupBuckets(request.getGroupBuckets())
+                                                  .setGroupFirstKey(request.getGroupFirstKey())
+                                                  .setLastValue(request.isLastValue())
+                                                  .setLastValueKey(request.getLastValueKey())
+                                                  .setNonDestructive(request.isNonDestructive())
+                                                  .setConsumersBeforeDispatch(request.getConsumersBeforeDispatch())
+                                                  .setDelayBeforeDispatch(request.getDelayBeforeDispatch())
+                                                  .setAutoDelete(request.isAutoDelete())
+                                                  .setAutoDeleteDelay(request.getAutoDeleteDelay())
+                                                  .setAutoDeleteMessageCount(request.getAutoDeleteMessageCount()));
                   }
                   if (requiresResponse) {
                      response = createNullResponseMessage(packet);

@@ -29,35 +29,42 @@ import org.junit.Test;
 public class ActiveMQParameterTest {
 
    @Test
-   public void testQueueParameters() {
+   public void testOldQueueParameters() {
       ActiveMQDestination activeMQDestination = new ActiveMQQueue("jms.queue.foo?exclusive=true");
       assertTrue(activeMQDestination.getQueueAttributes().getExclusive());
+      assertTrue(activeMQDestination.getQueueConfiguration().isExclusive());
 
       assertEquals("jms.queue.foo", activeMQDestination.getAddress());
 
       activeMQDestination = new ActiveMQQueue("jms.queue.foo?exclusive=false");
       assertFalse(activeMQDestination.getQueueAttributes().getExclusive());
+      assertFalse(activeMQDestination.getQueueConfiguration().isExclusive());
 
       activeMQDestination = new ActiveMQQueue("jms.queue.foo?last-value=true");
       assertTrue(activeMQDestination.getQueueAttributes().getLastValue());
+      assertTrue(activeMQDestination.getQueueConfiguration().isLastValue());
 
       activeMQDestination = new ActiveMQQueue("jms.queue.foo?last-value=false");
       assertFalse(activeMQDestination.getQueueAttributes().getLastValue());
+      assertFalse(activeMQDestination.getQueueConfiguration().isLastValue());
 
    }
 
    @Test
-   public void testMultipleQueueParameters() {
+   public void testMultipleOldQueueParameters() {
       ActiveMQDestination activeMQDestination = new ActiveMQQueue("jms.queue.foo?last-value=true&exclusive=true");
       assertEquals("jms.queue.foo", activeMQDestination.getAddress());
       assertTrue(activeMQDestination.getQueueAttributes().getLastValue());
+      assertTrue(activeMQDestination.getQueueConfiguration().isLastValue());
       assertTrue(activeMQDestination.getQueueAttributes().getExclusive());
+      assertTrue(activeMQDestination.getQueueConfiguration().isExclusive());
    }
 
    @Test
-   public void testNoQueueParameters() {
+   public void testNoOldQueueParameters() {
       ActiveMQDestination activeMQDestination = new ActiveMQQueue("jms.queue.foo");
       assertEquals("jms.queue.foo", activeMQDestination.getAddress());
       assertNull(activeMQDestination.getQueueAttributes());
+      assertNull(activeMQDestination.getQueueConfiguration());
    }
 }

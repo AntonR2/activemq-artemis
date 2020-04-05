@@ -26,6 +26,7 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.core.config.FederationConfiguration;
@@ -267,7 +268,7 @@ public class FederatedQueueTest extends FederatedTestBase {
       String queueName = getName();
       //Set queue up on both brokers
       for (int i = 0; i < 2; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
       FederationConfiguration federationConfiguration0 = FederatedTestUtil.createQueueUpstreamFederationConfiguration("server1", queueName);
       getServer(0).getConfiguration().getFederationConfigurations().add(federationConfiguration0);
@@ -285,7 +286,7 @@ public class FederatedQueueTest extends FederatedTestBase {
       String queueName = getName();
       //Set queue up on both brokers
       for (int i = 0; i < 2; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
       FederationConfiguration federationConfiguration0 = FederatedTestUtil.createQueueDownstreamFederationConfiguration("server1", queueName, "server0");
       getServer(0).getConfiguration().getFederationConfigurations().add(federationConfiguration0);
@@ -303,7 +304,7 @@ public class FederatedQueueTest extends FederatedTestBase {
       String queueName = getName();
       //Set queue up on both brokers
       for (int i = 0; i < 2; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
 
       FederationConfiguration federationConfiguration0 = FederatedTestUtil.createQueueDownstreamFederationConfiguration("server1-downstream",
@@ -321,7 +322,7 @@ public class FederatedQueueTest extends FederatedTestBase {
       String queueName = getName();
       //Set queue up on both brokers
       for (int i = 0; i < 2; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
 
       FederationConfiguration federationConfiguration0 = FederatedTestUtil.createQueueDownstreamFederationConfiguration("server1-downstream",
@@ -340,7 +341,7 @@ public class FederatedQueueTest extends FederatedTestBase {
       String queueName = getName();
       //Set queue up on both brokers
       for (int i = 0; i < 2; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
 
       FederationConfiguration federationConfiguration0 = FederatedTestUtil.createQueueDownstreamFederationConfiguration("server1-downstream",
@@ -357,7 +358,7 @@ public class FederatedQueueTest extends FederatedTestBase {
       String queueName = getName();
       //Set queue up on both brokers
       for (int i = 0; i < 2; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
 
       FederationConfiguration federationConfiguration0 = FederatedTestUtil.createQueueDownstreamFederationConfiguration("server1-downstream",
@@ -461,7 +462,7 @@ public class FederatedQueueTest extends FederatedTestBase {
 
       //Set queue up on all three brokers
       for (int i = 0; i < 3; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
 
       //Connect broker 0 (consumer will be here at end of chain) to broker 1
@@ -504,7 +505,7 @@ public class FederatedQueueTest extends FederatedTestBase {
 
       //Set queue up on both brokers
       for (int i = 0; i < 2; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
 
       FederationConfiguration federationConfiguration = FederatedTestUtil.createQueueUpstreamFederationConfiguration("server1", queueName);
@@ -559,7 +560,7 @@ public class FederatedQueueTest extends FederatedTestBase {
 
       //Set queue up on both brokers
       for (int i = 0; i < 2; i++) {
-         getServer(i).createQueue(SimpleString.toSimpleString(queueName), RoutingType.ANYCAST, SimpleString.toSimpleString(queueName), null, true, false);
+         getServer(i).createQueue(new QueueConfiguration(queueName).setRoutingType(RoutingType.ANYCAST));
       }
 
       FederationConfiguration federationConfiguration = FederatedTestUtil.createQueueUpstreamFederationConfiguration("server1", queueName);

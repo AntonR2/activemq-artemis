@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
@@ -187,9 +188,9 @@ public class SubscriptionsResource implements TimeoutTask.Callback {
             session = sessionFactory.createSession();
 
             if (durable) {
-               session.createQueue(destination, subscriptionName, true);
+               session.createQueue(new QueueConfiguration(subscriptionName).setAddress(destination));
             } else {
-               session.createTemporaryQueue(destination, subscriptionName);
+               session.createTemporaryQueue(new QueueConfiguration(subscriptionName).setAddress(destination));
             }
          }
          QueueConsumer consumer = createConsumer(durable, autoAck, subscriptionName, selector, timeout, deleteWhenIdle);
