@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
+import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
@@ -66,7 +67,7 @@ public class CreateQueueTest extends ActiveMQTestBase {
       EnumSet<RoutingType> routingTypes = EnumSet.of(RoutingType.ANYCAST);
       sendSession.createAddress(addressA, routingTypes, false);
       try {
-         sendSession.createQueue(addressA, RoutingType.MULTICAST, queueA);
+         sendSession.createQueue(new QueueConfiguration(queueA).setAddress(addressA));
          fail("Creating a queue here should fail since the queue routing type differs from what is supported on the address.");
       } catch (Exception e) {
          assertTrue(e instanceof ActiveMQException);
@@ -77,7 +78,7 @@ public class CreateQueueTest extends ActiveMQTestBase {
       routingTypes = EnumSet.of(RoutingType.MULTICAST);
       sendSession.createAddress(addressB, routingTypes, false);
       try {
-         sendSession.createQueue(addressB, RoutingType.ANYCAST, queueB);
+         sendSession.createQueue(new QueueConfiguration(queueB).setAddress(addressB).setRoutingType(RoutingType.ANYCAST));
          fail("Creating a queue here should fail since the queue routing type differs from what is supported on the address.");
       } catch (Exception e) {
          assertTrue(e instanceof ActiveMQException);
@@ -94,7 +95,7 @@ public class CreateQueueTest extends ActiveMQTestBase {
       Set<RoutingType> routingTypes = new HashSet<>();
       routingTypes.add(RoutingType.ANYCAST);
       try {
-         sendSession.createQueue(addressA, RoutingType.MULTICAST, queueA);
+         sendSession.createQueue(new QueueConfiguration(queueA).setAddress(addressA));
          fail("Creating a queue here should fail since the queue's address doesn't exist and auto-create-addresses = false.");
       } catch (Exception e) {
          assertTrue(e instanceof ActiveMQException);

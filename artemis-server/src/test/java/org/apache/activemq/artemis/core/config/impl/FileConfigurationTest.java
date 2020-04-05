@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.activemq.artemis.api.config.ActiveMQDefaultConfiguration;
 import org.apache.activemq.artemis.api.core.BroadcastGroupConfiguration;
 import org.apache.activemq.artemis.api.core.DiscoveryGroupConfiguration;
+import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
@@ -39,7 +40,6 @@ import org.apache.activemq.artemis.core.config.BridgeConfiguration;
 import org.apache.activemq.artemis.core.config.ClusterConnectionConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.CoreAddressConfiguration;
-import org.apache.activemq.artemis.core.config.CoreQueueConfiguration;
 import org.apache.activemq.artemis.core.config.DivertConfiguration;
 import org.apache.activemq.artemis.core.config.FileDeploymentManager;
 import org.apache.activemq.artemis.core.config.HAPolicyConfiguration;
@@ -405,17 +405,17 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       assertEquals(104, conf.getResourceLimitSettings().get("myUser").getMaxConnections());
       assertEquals(13, conf.getResourceLimitSettings().get("myUser").getMaxQueues());
 
-      assertEquals(2, conf.getQueueConfigurations().size());
+      assertEquals(2, conf.getQueueConfigs().size());
 
-      assertEquals("queue1", conf.getQueueConfigurations().get(0).getName());
-      assertEquals("address1", conf.getQueueConfigurations().get(0).getAddress());
-      assertEquals("color='red'", conf.getQueueConfigurations().get(0).getFilterString());
-      assertEquals(false, conf.getQueueConfigurations().get(0).isDurable());
+      assertEquals("queue1", conf.getQueueConfigs().get(0).getName());
+      assertEquals("address1", conf.getQueueConfigs().get(0).getAddress());
+      assertEquals("color='red'", conf.getQueueConfigs().get(0).getFilterString());
+      assertEquals(false, conf.getQueueConfigs().get(0).isDurable());
 
-      assertEquals("queue2", conf.getQueueConfigurations().get(1).getName());
-      assertEquals("address2", conf.getQueueConfigurations().get(1).getAddress());
-      assertEquals("color='blue'", conf.getQueueConfigurations().get(1).getFilterString());
-      assertEquals(false, conf.getQueueConfigurations().get(1).isDurable());
+      assertEquals("queue2", conf.getQueueConfigs().get(1).getName());
+      assertEquals("address2", conf.getQueueConfigs().get(1).getAddress());
+      assertEquals("color='blue'", conf.getQueueConfigs().get(1).getFilterString());
+      assertEquals(false, conf.getQueueConfigs().get(1).isDurable());
 
       verifyAddresses();
 
@@ -474,29 +474,29 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       Set<RoutingType> routingTypes = new HashSet<>();
       routingTypes.add(RoutingType.ANYCAST);
       assertEquals(routingTypes, addressConfiguration.getRoutingTypes());
-      assertEquals(2, addressConfiguration.getQueueConfigurations().size());
+      assertEquals(2, addressConfiguration.getQueueConfigs().size());
 
       // Addr 1 Queue 1
-      CoreQueueConfiguration queueConfiguration = addressConfiguration.getQueueConfigurations().get(0);
+      QueueConfiguration queueConfiguration = addressConfiguration.getQueueConfigs().get(0);
 
       assertEquals("q1", queueConfiguration.getName());
       assertEquals(3L, queueConfiguration.getRingSize().longValue());
       assertFalse(queueConfiguration.isDurable());
       assertEquals("color='blue'", queueConfiguration.getFilterString());
-      assertEquals(ActiveMQDefaultConfiguration.getDefaultPurgeOnNoConsumers(), queueConfiguration.getPurgeOnNoConsumers());
+      assertEquals(ActiveMQDefaultConfiguration.getDefaultPurgeOnNoConsumers(), queueConfiguration.isPurgeOnNoConsumers());
       assertEquals("addr1", queueConfiguration.getAddress());
       // If null, then default will be taken from address-settings (which defaults to ActiveMQDefaultConfiguration.getDefaultMaxQueueConsumers())
       assertEquals(null, queueConfiguration.getMaxConsumers());
 
       // Addr 1 Queue 2
-      queueConfiguration = addressConfiguration.getQueueConfigurations().get(1);
+      queueConfiguration = addressConfiguration.getQueueConfigs().get(1);
 
       assertEquals("q2", queueConfiguration.getName());
       assertEquals(-1, queueConfiguration.getRingSize().longValue());
       assertTrue(queueConfiguration.isDurable());
       assertEquals("color='green'", queueConfiguration.getFilterString());
       assertEquals(Queue.MAX_CONSUMERS_UNLIMITED, queueConfiguration.getMaxConsumers().intValue());
-      assertFalse(queueConfiguration.getPurgeOnNoConsumers());
+      assertFalse(queueConfiguration.isPurgeOnNoConsumers());
       assertEquals("addr1", queueConfiguration.getAddress());
 
       // Addr 2
@@ -505,27 +505,27 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       routingTypes = new HashSet<>();
       routingTypes.add(RoutingType.MULTICAST);
       assertEquals(routingTypes, addressConfiguration.getRoutingTypes());
-      assertEquals(2, addressConfiguration.getQueueConfigurations().size());
+      assertEquals(2, addressConfiguration.getQueueConfigs().size());
 
       // Addr 2 Queue 1
-      queueConfiguration = addressConfiguration.getQueueConfigurations().get(0);
+      queueConfiguration = addressConfiguration.getQueueConfigs().get(0);
 
       assertEquals("q3", queueConfiguration.getName());
       assertTrue(queueConfiguration.isDurable());
       assertEquals("color='red'", queueConfiguration.getFilterString());
       assertEquals(10, queueConfiguration.getMaxConsumers().intValue());
-      assertEquals(ActiveMQDefaultConfiguration.getDefaultPurgeOnNoConsumers(), queueConfiguration.getPurgeOnNoConsumers());
+      assertEquals(ActiveMQDefaultConfiguration.getDefaultPurgeOnNoConsumers(), queueConfiguration.isPurgeOnNoConsumers());
       assertEquals("addr2", queueConfiguration.getAddress());
 
       // Addr 2 Queue 2
-      queueConfiguration = addressConfiguration.getQueueConfigurations().get(1);
+      queueConfiguration = addressConfiguration.getQueueConfigs().get(1);
 
       assertEquals("q4", queueConfiguration.getName());
       assertTrue(queueConfiguration.isDurable());
       assertNull(queueConfiguration.getFilterString());
       // If null, then default will be taken from address-settings (which defaults to ActiveMQDefaultConfiguration.getDefaultMaxQueueConsumers())
       assertEquals(null, queueConfiguration.getMaxConsumers());
-      assertTrue(queueConfiguration.getPurgeOnNoConsumers());
+      assertTrue(queueConfiguration.isPurgeOnNoConsumers());
       assertEquals("addr2", queueConfiguration.getAddress());
 
       // Addr 3
