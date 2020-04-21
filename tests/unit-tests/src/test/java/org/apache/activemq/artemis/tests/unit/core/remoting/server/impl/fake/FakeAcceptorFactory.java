@@ -25,6 +25,7 @@ import org.apache.activemq.artemis.api.core.BaseInterceptor;
 import org.apache.activemq.artemis.core.security.ActiveMQPrincipal;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
 import org.apache.activemq.artemis.core.server.management.NotificationService;
+import org.apache.activemq.artemis.core.server.reload.ReloadManager;
 import org.apache.activemq.artemis.spi.core.protocol.ProtocolManager;
 import org.apache.activemq.artemis.spi.core.remoting.Acceptor;
 import org.apache.activemq.artemis.spi.core.remoting.AcceptorFactory;
@@ -43,7 +44,8 @@ public class FakeAcceptorFactory implements AcceptorFactory {
                                   ServerConnectionLifeCycleListener listener,
                                   Executor threadPool,
                                   ScheduledExecutorService scheduledThreadPool,
-                                  Map<String, ProtocolManager> protocolMap) {
+                                  Map<String, ProtocolManager> protocolMap,
+                                  ReloadManager reloadManager) {
       return new FakeAcceptor();
    }
 

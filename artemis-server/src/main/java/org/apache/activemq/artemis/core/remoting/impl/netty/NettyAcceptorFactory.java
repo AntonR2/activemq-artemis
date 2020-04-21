@@ -21,6 +21,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
+import org.apache.activemq.artemis.core.server.reload.ReloadManager;
 import org.apache.activemq.artemis.spi.core.protocol.ProtocolManager;
 import org.apache.activemq.artemis.spi.core.remoting.Acceptor;
 import org.apache.activemq.artemis.spi.core.remoting.AcceptorFactory;
@@ -38,8 +39,9 @@ public class NettyAcceptorFactory implements AcceptorFactory {
                                   final ServerConnectionLifeCycleListener listener,
                                   final Executor threadPool,
                                   final ScheduledExecutorService scheduledThreadPool,
-                                  final Map<String, ProtocolManager> protocolMap) {
+                                  final Map<String, ProtocolManager> protocolMap,
+                                  final ReloadManager reloadManager) {
       Executor failureExecutor = new OrderedExecutor(threadPool);
-      return new NettyAcceptor(name, connection, configuration, handler, listener, scheduledThreadPool, failureExecutor, protocolMap);
+      return new NettyAcceptor(name, connection, configuration, handler, listener, scheduledThreadPool, failureExecutor, protocolMap, reloadManager);
    }
 }

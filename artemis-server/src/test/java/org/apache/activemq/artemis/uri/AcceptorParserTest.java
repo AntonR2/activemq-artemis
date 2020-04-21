@@ -49,7 +49,7 @@ public class AcceptorParserTest {
       Assert.assertEquals(33, ConfigurationHelper.getIntProperty(TransportConstants.QUIET_PERIOD, -1, configs.get(0).getParams()));
       Assert.assertEquals(55, ConfigurationHelper.getIntProperty(TransportConstants.SHUTDOWN_TIMEOUT, -1, configs.get(0).getParams()));
 
-      NettyAcceptor nettyAcceptor = new NettyAcceptor("name", null, configs.get(0).getParams(), null, null, null, null, new HashMap<>());
+      NettyAcceptor nettyAcceptor = new NettyAcceptor("name", null, configs.get(0).getParams(), null, null, null, null, new HashMap<>(), null);
 
       Assert.assertEquals(33, nettyAcceptor.getQuietPeriod());
       Assert.assertEquals(55, nettyAcceptor.getShutdownTimeout());

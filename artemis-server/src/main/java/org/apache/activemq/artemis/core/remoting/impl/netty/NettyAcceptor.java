@@ -24,7 +24,10 @@ import javax.net.ssl.SSLParameters;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.SocketAddress;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
@@ -88,6 +91,8 @@ import org.apache.activemq.artemis.core.server.ActiveMQServerLogger;
 import org.apache.activemq.artemis.core.server.cluster.ClusterConnection;
 import org.apache.activemq.artemis.core.server.management.Notification;
 import org.apache.activemq.artemis.core.server.management.NotificationService;
+import org.apache.activemq.artemis.core.server.reload.ReloadCallback;
+import org.apache.activemq.artemis.core.server.reload.ReloadManager;
 import org.apache.activemq.artemis.spi.core.protocol.ProtocolManager;
 import org.apache.activemq.artemis.spi.core.remoting.BufferHandler;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
@@ -240,7 +245,8 @@ public class NettyAcceptor extends AbstractAcceptor {
                         final ServerConnectionLifeCycleListener listener,
                         final ScheduledExecutorService scheduledThreadPool,
                         final Executor failureExecutor,
-                        final Map<String, ProtocolManager> protocolMap) {
+                        final Map<String, ProtocolManager> protocolMap,
+                        final ReloadManager reloadManager) {
       super(protocolMap);
 
       this.failureExecutor = failureExecutor;
@@ -283,11 +289,27 @@ public class NettyAcceptor extends AbstractAcceptor {
 
          keyStorePath = ConfigurationHelper.getStringProperty(TransportConstants.KEYSTORE_PATH_PROP_NAME, TransportConstants.DEFAULT_KEYSTORE_PATH, configuration);
 
+         if (keyStorePath != TransportConstants.DEFAULT_KEYSTORE_PATH) {
+            try {
+               reloadManager.addCallback(Paths.get(keyStorePath).toUri().toURL(), new AcceptorReloader(this));
+            } catch (MalformedURLException e) {
+               e.printStackTrace();
+            }
+         }
+
          keyStorePassword = ConfigurationHelper.getPasswordProperty(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, TransportConstants.DEFAULT_KEYSTORE_PASSWORD, configuration, ActiveMQDefaultConfiguration.getPropMaskPassword(), ActiveMQDefaultConfiguration.getPropPasswordCodec());
 
          trustStoreProvider = ConfigurationHelper.getStringProperty(TransportConstants.TRUSTSTORE_PROVIDER_PROP_NAME, TransportConstants.DEFAULT_TRUSTSTORE_PROVIDER, configuration);
 
          trustStorePath = ConfigurationHelper.getStringProperty(TransportConstants.TRUSTSTORE_PATH_PROP_NAME, TransportConstants.DEFAULT_TRUSTSTORE_PATH, configuration);
+
+         if (trustStorePath != TransportConstants.DEFAULT_TRUSTSTORE_PATH) {
+            try {
+               reloadManager.addCallback(Paths.get(trustStorePath).toUri().toURL(), new AcceptorReloader(this));
+            } catch (MalformedURLException e) {
+               e.printStackTrace();
+            }
+         }
 
          trustStorePassword = ConfigurationHelper.getPasswordProperty(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, TransportConstants.DEFAULT_TRUSTSTORE_PASSWORD, configuration, ActiveMQDefaultConfiguration.getPropMaskPassword(), ActiveMQDefaultConfiguration.getPropPasswordCodec());
 
@@ -1014,6 +1036,20 @@ public class NettyAcceptor extends AbstractAcceptor {
             throwable = throwable.getCause();
          }
          return (list.size() < 2 ? throwable : list.get(list.size() - 1));
+      }
+   }
+
+   public class AcceptorReloader implements ReloadCallback {
+      final NettyAcceptor acceptor;
+
+      public AcceptorReloader(NettyAcceptor acceptor) {
+         this.acceptor = acceptor;
+      }
+
+      @Override
+      public void reload(URL uri) throws Exception {
+         // TODO reload or stop/start the acceptor based on configuration
+         acceptor.reload();
       }
    }
 }
