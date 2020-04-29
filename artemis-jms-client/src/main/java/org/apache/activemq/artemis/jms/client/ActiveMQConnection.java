@@ -145,6 +145,8 @@ public class ActiveMQConnection extends ActiveMQConnectionForContextImpl impleme
 
    private final ConnectionFactoryOptions options;
 
+   private volatile Object connectionLock = new Object();
+
    // Constructors ---------------------------------------------------------------------------------
 
    public ActiveMQConnection(final ConnectionFactoryOptions options,
@@ -343,52 +345,57 @@ public class ActiveMQConnection extends ActiveMQConnectionForContextImpl impleme
    }
 
    @Override
-   public final synchronized void close() throws JMSException {
-      threadAwareContext.assertNotCompletionListenerThread();
-      threadAwareContext.assertNotMessageListenerThread();
+   public final void close() throws JMSException {
+      synchronized (connectionLock) {
+         System.out.println("Sync2 " + this);
+         threadAwareContext.assertNotCompletionListenerThread();
+         threadAwareContext.assertNotMessageListenerThread();
 
-      if (closed) {
-         return;
-      }
-
-      sessionFactory.close();
-
-      try {
-         for (ActiveMQSession session : new HashSet<>(sessions)) {
-            session.close();
+         if (closed) {
+            System.out.println("unSync2-1 " + this);
+            return;
          }
 
-         try {
-            if (!tempQueues.isEmpty()) {
-               // Remove any temporary queues
+         sessionFactory.close();
 
-               for (SimpleString queueName : tempQueues) {
-                  if (!initialSession.isClosed()) {
-                     try {
-                        initialSession.deleteQueue(queueName);
-                     } catch (ActiveMQException ignore) {
-                        // Exception on deleting queue shouldn't prevent close from completing
+         try {
+            for (ActiveMQSession session : new HashSet<>(sessions)) {
+               session.close();
+            }
+
+            try {
+               if (!tempQueues.isEmpty()) {
+                  // Remove any temporary queues
+
+                  for (SimpleString queueName : tempQueues) {
+                     if (!initialSession.isClosed()) {
+                        try {
+                           initialSession.deleteQueue(queueName);
+                        } catch (ActiveMQException ignore) {
+                           // Exception on deleting queue shouldn't prevent close from completing
+                        }
                      }
                   }
                }
+            } finally {
+               if (initialSession != null) {
+                  initialSession.close();
+               }
             }
-         } finally {
-            if (initialSession != null) {
-               initialSession.close();
-            }
+
+            AccessController.doPrivileged(new PrivilegedAction() {
+               @Override
+               public Object run() {
+                  failoverListenerExecutor.shutdown();
+                  return null;
+               }
+            });
+
+            closed = true;
+         } catch (ActiveMQException e) {
+            throw JMSExceptionHelper.convertFromActiveMQException(e);
          }
-
-         AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-               failoverListenerExecutor.shutdown();
-               return null;
-            }
-         });
-
-         closed = true;
-      } catch (ActiveMQException e) {
-         throw JMSExceptionHelper.convertFromActiveMQException(e);
+         System.out.println("unSync2-2 " + this);
       }
    }
 
@@ -596,51 +603,55 @@ public class ActiveMQConnection extends ActiveMQConnectionForContextImpl impleme
                                                          final boolean transacted,
                                                          int acknowledgeMode,
                                                          final int type) throws JMSException {
-      if (transacted) {
-         acknowledgeMode = Session.SESSION_TRANSACTED;
-      }
-
-      try {
-         ClientSession session;
-         boolean isBlockOnAcknowledge = sessionFactory.getServerLocator().isBlockOnAcknowledge();
-         int ackBatchSize = sessionFactory.getServerLocator().getAckBatchSize();
-         if (acknowledgeMode == Session.SESSION_TRANSACTED) {
-            session = sessionFactory.createSession(username, password, isXA, false, false, sessionFactory.getServerLocator().isPreAcknowledge(), transactionBatchSize);
-         } else if (acknowledgeMode == Session.AUTO_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, true, sessionFactory.getServerLocator().isPreAcknowledge(), 0);
-         } else if (acknowledgeMode == Session.DUPS_OK_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, true, sessionFactory.getServerLocator().isPreAcknowledge(), dupsOKBatchSize);
-         } else if (acknowledgeMode == Session.CLIENT_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, false, sessionFactory.getServerLocator().isPreAcknowledge(), isBlockOnAcknowledge ? transactionBatchSize : ackBatchSize);
-         } else if (acknowledgeMode == ActiveMQJMSConstants.INDIVIDUAL_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, false, false, isBlockOnAcknowledge ? transactionBatchSize : ackBatchSize);
-         } else if (acknowledgeMode == ActiveMQJMSConstants.PRE_ACKNOWLEDGE) {
-            session = sessionFactory.createSession(username, password, isXA, true, false, true, transactionBatchSize);
-         } else {
-            throw new JMSRuntimeException("Invalid ackmode: " + acknowledgeMode);
+      synchronized (connectionLock) {
+         System.out.println("Sync1 " + this);
+         if (transacted) {
+            acknowledgeMode = Session.SESSION_TRANSACTED;
          }
 
-         justCreated = false;
+         try {
+            ClientSession session;
+            boolean isBlockOnAcknowledge = sessionFactory.getServerLocator().isBlockOnAcknowledge();
+            int ackBatchSize = sessionFactory.getServerLocator().getAckBatchSize();
+            if (acknowledgeMode == Session.SESSION_TRANSACTED) {
+               session = sessionFactory.createSession(username, password, isXA, false, false, sessionFactory.getServerLocator().isPreAcknowledge(), transactionBatchSize);
+            } else if (acknowledgeMode == Session.AUTO_ACKNOWLEDGE) {
+               session = sessionFactory.createSession(username, password, isXA, true, true, sessionFactory.getServerLocator().isPreAcknowledge(), 0);
+            } else if (acknowledgeMode == Session.DUPS_OK_ACKNOWLEDGE) {
+               session = sessionFactory.createSession(username, password, isXA, true, true, sessionFactory.getServerLocator().isPreAcknowledge(), dupsOKBatchSize);
+            } else if (acknowledgeMode == Session.CLIENT_ACKNOWLEDGE) {
+               session = sessionFactory.createSession(username, password, isXA, true, false, sessionFactory.getServerLocator().isPreAcknowledge(), isBlockOnAcknowledge ? transactionBatchSize : ackBatchSize);
+            } else if (acknowledgeMode == ActiveMQJMSConstants.INDIVIDUAL_ACKNOWLEDGE) {
+               session = sessionFactory.createSession(username, password, isXA, true, false, false, isBlockOnAcknowledge ? transactionBatchSize : ackBatchSize);
+            } else if (acknowledgeMode == ActiveMQJMSConstants.PRE_ACKNOWLEDGE) {
+               session = sessionFactory.createSession(username, password, isXA, true, false, true, transactionBatchSize);
+            } else {
+               throw new JMSRuntimeException("Invalid ackmode: " + acknowledgeMode);
+            }
 
-         // Setting multiple times on different sessions doesn't matter since RemotingConnection
-         // maintains
-         // a set (no duplicates)
-         session.addFailureListener(listener);
-         session.addFailoverListener(failoverListener);
+            justCreated = false;
 
-         ActiveMQSession jbs = createAMQSession(isXA, transacted, acknowledgeMode, session, type);
+            // Setting multiple times on different sessions doesn't matter since RemotingConnection
+            // maintains
+            // a set (no duplicates)
+            session.addFailureListener(listener);
+            session.addFailoverListener(failoverListener);
 
-         sessions.add(jbs);
+            ActiveMQSession jbs = createAMQSession(isXA, transacted, acknowledgeMode, session, type);
 
-         if (started) {
-            session.start();
+            sessions.add(jbs);
+
+            if (started) {
+               session.start();
+            }
+
+            this.addSessionMetaData(session);
+            return jbs;
+         } catch (ActiveMQException e) {
+            throw JMSExceptionHelper.convertFromActiveMQException(e);
+         } finally {
+            System.out.println("unSync1 " + this);
          }
-
-         this.addSessionMetaData(session);
-
-         return jbs;
-      } catch (ActiveMQException e) {
-         throw JMSExceptionHelper.convertFromActiveMQException(e);
       }
    }
 
