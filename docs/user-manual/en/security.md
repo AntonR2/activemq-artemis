@@ -6,9 +6,9 @@ you can configure it.
 To disable security completely simply set the `security-enabled` property to
 `false` in the `broker.xml` file.
 
-For performance reasons security is cached and invalidated every so long. To
-change this period set the property `security-invalidation-interval`, which is
-in milliseconds. The default is `10000` ms.
+For performance reasons **security is cached** and invalidated every so long.
+To change this period set the property `security-invalidation-interval`, which
+is in milliseconds. Using `0` will disable caching. The default is `10000` ms.
 
 ## Tracking the Validated User
 
