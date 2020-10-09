@@ -352,15 +352,22 @@ the Transport](configuring-transports.md).
 
 ## User credentials
 
-Apache ActiveMQ Artemis ships with two security manager implementations:
-
-- The legacy, deprecated `ActiveMQSecurityManager` that reads user credentials,
-  i.e. user names, passwords and role information from properties files on the
-  classpath called `artemis-users.properties` and `artemis-roles.properties`.
+Apache ActiveMQ Artemis ships with three security manager implementations:
 
 - The flexible, pluggable `ActiveMQJAASSecurityManager` which supports any
   standard JAAS login module. Artemis ships with several login modules which
   will be discussed further down. This is the default security manager.
+
+- The `ActiveMQBasicSecurityManager` which doesn't use JAAS and only supports
+  auth via username & password credentials. It also supports adding, removing,
+  and updating users via the management API. All user & role data is stored
+  in the broker's bindings journal which means any changes made to a live
+  broker will be available on its backup.
+
+- The legacy, deprecated `ActiveMQSecurityManagerImpl` that reads user
+  credentials, i.e. user names, passwords and role information from properties
+  files on the classpath called `artemis-users.properties` and
+  `artemis-roles.properties`.
 
 ### JAAS Security Manager
 
@@ -1098,6 +1105,33 @@ cypher suites offered by rfc2712 are dated and insecure and rfc2712 has been
 superseded by SASL GSSAPI. However, for clients that don't support SASL (core
 client), using TLS can provide Kerberos authentication over an *unsecure*
 channel.
+
+### Basic Security Manager
+
+The `ActiveMQBasicSecurityManager` is _basic_. It is not pluggable like the JAAS
+security manager and it _only_ supports authentication via username and password
+credentials. However, it does have a couple of potential advantages depending on
+your use-case.
+
+All user & role data is stored in the bindings journal (or bindings table if using
+JDBC). The advantage here is that in a live/backup use-case any user management
+performed on the live broker will be reflected on the backup upon failover.
+Typically LDAP would be employed for this kind of use-case, but not everyone wants
+or is able to administer an independent LDAP server.
+
+User management is provided by the broker's management API. This includes the
+ability to add, list, update, and remove users and roles. This is available in a myriad of ways (JMX, management messages, HTTP, etc.).
+
+Must secure underlying MBeans.
+
+Broker must be running to manage users
+
+#### Configuration
+
+bootstrap.xml
+
+```xml
+```
 
 ## Mapping external roles
 Roles from external authentication providers (i.e. LDAP) can be mapped to internally used roles. The is done through role-mapping entries in the security-settings block:
