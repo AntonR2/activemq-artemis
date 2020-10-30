@@ -137,16 +137,16 @@ public class ActiveMQJAASSecurityManager implements ActiveMQSecurityManager5 {
          }
          try {
             lc.login();
-            if (AuditLogger.isAnyLoggingEnabled() && remotingConnection != null) {
-               remotingConnection.setAuditSubject(lc.getSubject());
-            }
-            if (AuditLogger.isResourceLoggingEnabled()) {
-               AuditLogger.userSuccesfullyLoggedInAudit(lc.getSubject());
-            }
+//            if (AuditLogger.isAnyLoggingEnabled() && remotingConnection != null) {
+//               remotingConnection.setAuditSubject(lc.getSubject());
+//            }
+//            if (AuditLogger.isResourceLoggingEnabled()) {
+//               AuditLogger.userSuccesfullyLoggedInAudit(lc.getSubject());
+//            }
          } catch (LoginException e) {
-            if (AuditLogger.isResourceLoggingEnabled()) {
-               AuditLogger.userFailedLoggedInAudit(lc.getSubject(), e.getMessage());
-            }
+//            if (AuditLogger.isResourceLoggingEnabled()) {
+//               AuditLogger.userFailedLoggedInAudit(lc.getSubject(), e.getMessage());
+//            }
             throw e;
          }
          return lc.getSubject();

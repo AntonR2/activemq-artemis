@@ -73,10 +73,15 @@ public interface AuditLogger extends BasicLogger {
 
    static String getCaller() {
       Subject subject = Subject.getSubject(AccessController.getContext());
+      System.out.println(Thread.currentThread().getName() + " subject 1: " + subject);
       if (subject == null) {
          subject = currentCaller.get();
+         System.out.println(Thread.currentThread().getName() + " subject 2: " + subject);
       }
-      return getCaller(subject);
+      String result = getCaller(subject);
+
+      System.out.println(Thread.currentThread().getName() + " result: " + result);
+      return result;
    }
 
    static String getCaller(String user) {
@@ -108,6 +113,8 @@ public interface AuditLogger extends BasicLogger {
    }
 
    static void setCurrentCaller(Subject caller) {
+      System.out.println(Thread.currentThread().getName() + " setCurrentCaller: " + caller);
+      new Exception().printStackTrace();
       currentCaller.set(caller);
    }
 
@@ -2428,8 +2435,8 @@ public interface AuditLogger extends BasicLogger {
    void logCoreSendMessage(String user, String messageToString, Object context);
 
    //hot path log using a different logger
-   static void coreConsumeMessage(String queue) {
-      MESSAGE_LOGGER.consumeMessage(getCaller(), queue);
+   static void coreConsumeMessage(Subject user, String queue) {
+      MESSAGE_LOGGER.consumeMessage(getCaller(user), queue);
    }
 
    @LogMessage(level = Logger.Level.INFO)

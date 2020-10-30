@@ -78,7 +78,7 @@ public class SimpleTest extends ActiveMQTestBase {
        * Create a session from the factory. The call to create the session is surrounded with addClientSession to
        * ensure the session will be cleaned up properly when the test is torn down.
        */
-      session = addClientSession(sf.createSession(false, true, true));
+      session = addClientSession(sf.createSession(false, false, false));
    }
 
    @Test
@@ -101,6 +101,8 @@ public class SimpleTest extends ActiveMQTestBase {
 
       // Send the message. This send will be auto-committed based on the way the session was created in setUp()
       producer.send(message);
+
+      session.commit();
 
       // Close the producer.
       producer.close();

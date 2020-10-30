@@ -168,10 +168,10 @@ public class SecurityStoreImpl implements SecurityStore, HierarchicalRepositoryC
                validatedUser = getUserFromSubject(cacheEntry.getB());
             }
          }
-
+         Subject subject = null;
          if (check) {
             if (securityManager instanceof ActiveMQSecurityManager5) {
-               Subject subject = ((ActiveMQSecurityManager5) securityManager).authenticate(user, password, connection, securityDomain);
+               subject = ((ActiveMQSecurityManager5) securityManager).authenticate(user, password, connection, securityDomain);
                authenticationCache.put(createAuthenticationCacheKey(user, password, connection), new Pair<>(subject != null, subject));
                validatedUser = getUserFromSubject(subject);
             } else if (securityManager instanceof ActiveMQSecurityManager4) {
@@ -204,7 +204,18 @@ public class SecurityStoreImpl implements SecurityStore, HierarchicalRepositoryC
 
             ActiveMQServerLogger.LOGGER.securityProblemWhileAuthenticating(e.getMessage());
 
+            if (AuditLogger.isResourceLoggingEnabled()) {
+               AuditLogger.userFailedLoggedInAudit(subject, e.getMessage());
+            }
+
             throw e;
+         }
+
+         if (AuditLogger.isAnyLoggingEnabled() && connection != null) {
+            connection.setAuditSubject(subject);
+         }
+         if (AuditLogger.isResourceLoggingEnabled()) {
+            AuditLogger.userSuccesfullyLoggedInAudit(subject);
          }
 
          return validatedUser;

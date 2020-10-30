@@ -82,12 +82,12 @@ public class ActiveMQBasicSecurityManager implements ActiveMQSecurityManager5, U
                   for (String role : getRole(userToAuthenticate).getRoles()) {
                      subject.getPrincipals().add((Principal) SecurityManagerUtil.createGroupPrincipal(role, rolePrincipalClass));
                   }
-                  if (AuditLogger.isAnyLoggingEnabled() && remotingConnection != null) {
-                     remotingConnection.setAuditSubject(subject);
-                  }
-                  if (AuditLogger.isResourceLoggingEnabled()) {
-                     AuditLogger.userSuccesfullyLoggedInAudit(subject);
-                  }
+//                  if (AuditLogger.isAnyLoggingEnabled() && remotingConnection != null) {
+//                     remotingConnection.setAuditSubject(subject);
+//                  }
+//                  if (AuditLogger.isResourceLoggingEnabled()) {
+//                     AuditLogger.userSuccesfullyLoggedInAudit(subject);
+//                  }
                   return subject;
                }
             }

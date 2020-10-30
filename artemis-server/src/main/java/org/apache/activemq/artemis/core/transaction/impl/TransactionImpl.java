@@ -266,6 +266,7 @@ public class TransactionImpl implements Transaction {
 
    @Override
    public void commit(final boolean onePhase) throws Exception {
+      logger.info("Committing tx: " + this, new Exception());
       if (logger.isTraceEnabled()) {
          logger.trace("TransactionImpl::commit::" + this);
       }
