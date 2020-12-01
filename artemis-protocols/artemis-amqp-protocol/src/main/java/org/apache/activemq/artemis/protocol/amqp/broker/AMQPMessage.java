@@ -1339,6 +1339,17 @@ public abstract class AMQPMessage extends RefCountMessage implements org.apache.
       return extra.getProperty(key);
    }
 
+   @Override
+   public final org.apache.activemq.artemis.api.core.Message setIngressTimestamp() {
+      setMessageAnnotation(AMQPMessageSupport.INGRESS_TIME, System.currentTimeMillis());
+      return this;
+   }
+
+   @Override
+   public Long getIngressTimestamp() {
+      return (Long) getMessageAnnotation(AMQPMessageSupport.INGRESS_TIME);
+   }
+
 
    // JMS Style property access methods.  These can result in additional decode of AMQP message
    // data from Application properties.  Updates to application properties puts the message in a

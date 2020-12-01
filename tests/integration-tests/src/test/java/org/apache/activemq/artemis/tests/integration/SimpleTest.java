@@ -83,6 +83,7 @@ public class SimpleTest extends ActiveMQTestBase {
 
    @Test
    public void simpleTest() throws Exception {
+      System.out.println((String) null);
       final String data = "Simple Text " + UUID.randomUUID().toString();
       final String queueName = "simpleQueue";
       final String addressName = "simpleAddress";

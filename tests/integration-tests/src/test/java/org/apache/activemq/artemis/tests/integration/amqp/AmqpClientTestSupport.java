@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.artemis.tests.integration.amqp;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import java.net.URI;
@@ -25,10 +30,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.api.core.QueueConfiguration;
 import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientMessage;
+import org.apache.activemq.artemis.api.core.client.ClientProducer;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.security.Role;
 import org.apache.activemq.artemis.core.server.ActiveMQServer;
@@ -396,6 +408,42 @@ public class AmqpClientTestSupport extends AmqpTestSupport {
             message.setMessageId("MessageID:" + i);
             message.setDurable(durable);
             sender.send(message);
+         }
+      } finally {
+         connection.close();
+      }
+   }
+
+   protected void sendMessagesCore(String destinationName, int count, boolean durable) throws Exception {
+      ServerLocator serverLocator = ActiveMQClient.createServerLocator("tcp://127.0.0.1:5672");
+      ClientSessionFactory clientSessionFactory = serverLocator.createSessionFactory();
+      ClientSession session = clientSessionFactory.createSession();
+      try {
+         ClientProducer sender = session.createProducer(destinationName);
+
+         for (int i = 0; i < count; ++i) {
+            ClientMessage message = session.createMessage(durable);
+            sender.send(message);
+         }
+      } finally {
+         session.close();
+      }
+   }
+
+   protected void sendMessagesOpenWire(String destinationName, int count, boolean durable) throws Exception {
+      ConnectionFactory cf = new ActiveMQConnectionFactory("tcp://127.0.0.1:5672");
+      Connection connection = cf.createConnection();
+      Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+      try {
+         MessageProducer producer = session.createProducer(session.createQueue(destinationName));
+         if (durable) {
+            producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+         } else {
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+         }
+
+         for (int i = 0; i < count; ++i) {
+            producer.send(session.createMessage());
          }
       } finally {
          connection.close();

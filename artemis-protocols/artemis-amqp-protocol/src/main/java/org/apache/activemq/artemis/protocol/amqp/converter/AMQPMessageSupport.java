@@ -185,6 +185,8 @@ public final class AMQPMessageSupport {
    public static final String X_OPT_PREFIX = "x-opt-";
    public static final String AMQ_PROPERTY_PREFIX = "_AMQ_";
 
+   public static final String HDR_INGRESS_TIME = X_OPT_PREFIX + "ingress-time";
+
    public static final short AMQP_UNKNOWN = 0;
    public static final short AMQP_NULL = 1;
    public static final short AMQP_DATA = 2;
@@ -197,6 +199,8 @@ public final class AMQPMessageSupport {
 
    public static final Symbol JMS_DEST_TYPE_MSG_ANNOTATION = getSymbol("x-opt-jms-dest");
    public static final Symbol JMS_REPLY_TO_TYPE_MSG_ANNOTATION = getSymbol("x-opt-jms-reply-to");
+
+   public static final Symbol INGRESS_TIME = getSymbol(HDR_INGRESS_TIME);
 
    public static final byte QUEUE_TYPE = 0x00;
    public static final byte TOPIC_TYPE = 0x01;

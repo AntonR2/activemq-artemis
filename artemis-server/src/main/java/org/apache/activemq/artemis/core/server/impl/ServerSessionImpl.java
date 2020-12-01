@@ -1795,6 +1795,11 @@ public class ServerSessionImpl implements ServerSession, FailureListener {
             throw ActiveMQMessageBundle.BUNDLE.noAddress();
          }
 
+         if (server.getAddressSettingsRepository().getMatch(message.getAddress()).getEnableIngressTime()) {
+            message.setIngressTimestamp();
+            message.reencode();
+         }
+
          if (message.getAddressSimpleString().equals(managementAddress)) {
             // It's a management message
 

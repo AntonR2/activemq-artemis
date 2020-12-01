@@ -378,6 +378,7 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       assertEquals(3, conf.getAddressesSettings().get("a1").getDefaultRingSize());
       assertEquals(0, conf.getAddressesSettings().get("a1").getRetroactiveMessageCount());
       assertTrue(conf.getAddressesSettings().get("a1").isEnableMetrics());
+      assertTrue(conf.getAddressesSettings().get("a1").getEnableIngressTime());
 
       assertEquals("a2.1", conf.getAddressesSettings().get("a2").getDeadLetterAddress().toString());
       assertEquals(true, conf.getAddressesSettings().get("a2").isAutoCreateDeadLetterResources());
@@ -413,6 +414,7 @@ public class FileConfigurationTest extends ConfigurationImplTest {
       assertEquals(-1, conf.getAddressesSettings().get("a2").getDefaultRingSize());
       assertEquals(10, conf.getAddressesSettings().get("a2").getRetroactiveMessageCount());
       assertFalse(conf.getAddressesSettings().get("a2").isEnableMetrics());
+      assertFalse(conf.getAddressesSettings().get("a2").getEnableIngressTime());
 
       assertTrue(conf.getResourceLimitSettings().containsKey("myUser"));
       assertEquals(104, conf.getResourceLimitSettings().get("myUser").getMaxConnections());

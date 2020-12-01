@@ -127,6 +127,8 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
 
    public static final boolean DEFAULT_ENABLE_METRICS = true;
 
+   public static final boolean DEFAULT_ENABLE_INGRESS_TIME = false;
+
    private AddressFullMessagePolicy addressFullMessagePolicy = null;
 
    private Long maxSizeBytes = null;
@@ -253,6 +255,8 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
 
    private Boolean enableMetrics = null;
 
+   private Boolean enableIngressTime = null;
+
    //from amq5
    //make it transient
    private transient Integer queuePrefetch = null;
@@ -318,6 +322,7 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
       this.defaultGroupFirstKey = other.defaultGroupFirstKey;
       this.defaultRingSize = other.defaultRingSize;
       this.enableMetrics = other.enableMetrics;
+      this.enableIngressTime = other.enableIngressTime;
    }
 
    public AddressSettings() {
@@ -914,6 +919,15 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
       return this;
    }
 
+   public boolean getEnableIngressTime() {
+      return enableIngressTime != null ? enableIngressTime : AddressSettings.DEFAULT_ENABLE_INGRESS_TIME;
+   }
+
+   public AddressSettings setEnableIngressTime(final boolean enableIngressTime) {
+      this.enableIngressTime = enableIngressTime;
+      return this;
+   }
+
    /**
     * merge 2 objects in to 1
     *
@@ -1106,6 +1120,9 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
       }
       if (enableMetrics == null) {
          enableMetrics = merged.enableMetrics;
+      }
+      if (enableIngressTime == null) {
+         enableIngressTime = merged.enableIngressTime;
       }
    }
 
@@ -1320,6 +1337,9 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
          defaultGroupRebalancePauseDispatch = BufferHelper.readNullableBoolean(buffer);
       }
 
+      if (buffer.readableBytes() > 0) {
+         enableIngressTime = BufferHelper.readNullableBoolean(buffer);
+      }
    }
 
    @Override
@@ -1383,7 +1403,8 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
          SimpleString.sizeofNullableString(expiryQueuePrefix) +
          SimpleString.sizeofNullableString(expiryQueueSuffix) +
          BufferHelper.sizeOfNullableBoolean(enableMetrics) +
-         BufferHelper.sizeOfNullableBoolean(defaultGroupRebalancePauseDispatch);
+         BufferHelper.sizeOfNullableBoolean(defaultGroupRebalancePauseDispatch) +
+         BufferHelper.sizeOfNullableBoolean(enableIngressTime);
    }
 
    @Override
@@ -1510,6 +1531,7 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
 
       BufferHelper.writeNullableBoolean(buffer, defaultGroupRebalancePauseDispatch);
 
+      BufferHelper.writeNullableBoolean(buffer, enableIngressTime);
    }
 
    /* (non-Javadoc)
@@ -1581,6 +1603,7 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
       result = prime * result + ((expiryQueuePrefix == null) ? 0 : expiryQueuePrefix.hashCode());
       result = prime * result + ((expiryQueueSuffix == null) ? 0 : expiryQueueSuffix.hashCode());
       result = prime * result + ((enableMetrics == null) ? 0 : enableMetrics.hashCode());
+      result = prime * result + ((enableIngressTime == null) ? 0 : enableIngressTime.hashCode());
       return result;
    }
 
@@ -1928,6 +1951,12 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
       } else if (!enableMetrics.equals(other.enableMetrics))
          return false;
 
+      if (enableIngressTime == null) {
+         if (other.enableIngressTime != null)
+            return false;
+      } else if (!enableIngressTime.equals(other.enableIngressTime))
+         return false;
+
       return true;
    }
 
@@ -2057,6 +2086,8 @@ public class AddressSettings implements Mergeable<AddressSettings>, Serializable
          expiryQueueSuffix +
          ", enableMetrics=" +
          enableMetrics +
+         ", enableIngressTime=" +
+         enableIngressTime +
          "]";
    }
 }

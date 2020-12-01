@@ -3863,6 +3863,14 @@
                </xsd:annotation>
             </xsd:element>
 
+            <xsd:element name="enable-ingress-time" type="xsd:boolean" default="false" maxOccurs="1" minOccurs="0">
+               <xsd:annotation>
+                  <xsd:documentation>
+                     whether or not the broker should set its own time on incoming messages to the matching address
+                  </xsd:documentation>
+               </xsd:annotation>
+            </xsd:element>
+
          </xsd:all>
 
          <xsd:attribute name="match" type="xsd:string" use="required">
