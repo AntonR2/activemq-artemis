@@ -20,6 +20,8 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.artemis.api.core.Message;
@@ -40,15 +42,32 @@ import org.apache.activemq.artemis.core.server.group.impl.GroupingHandlerConfigu
 import org.apache.activemq.artemis.core.server.impl.QueueImpl;
 import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
-import org.apache.activemq.artemis.tests.integration.IntegrationTestLogger;
 import org.apache.activemq.artemis.tests.util.Wait;
+import org.jboss.logging.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(value = Parameterized.class)
 public class MessageRedistributionTest extends ClusterTestBase {
+   protected final MessageLoadBalancingType messageLoadBalancingType;
 
-   private static final IntegrationTestLogger log = IntegrationTestLogger.LOGGER;
+   @Parameterized.Parameters(name = "messageLoadBalancingType={0}")
+   public static Collection<MessageLoadBalancingType[]> getParams() {
+      return Arrays.asList(new MessageLoadBalancingType[][] {{MessageLoadBalancingType.ON_DEMAND}, {MessageLoadBalancingType.REDISTRIBUTION_ONLY}, {MessageLoadBalancingType.STRICT_WITH_REDISTRIBUTION}});
+   }
+
+   /**
+    * @param messageLoadBalancingType
+    */
+   public MessageRedistributionTest(MessageLoadBalancingType messageLoadBalancingType) {
+      super();
+      this.messageLoadBalancingType = messageLoadBalancingType;
+   }
+
+   private static final Logger log = Logger.getLogger(MessageRedistributionTest.class);
 
    @Override
    @Before
@@ -82,9 +101,10 @@ public class MessageRedistributionTest extends ClusterTestBase {
    //https://issues.jboss.org/browse/HORNETQ-1061
    @Test
    public void testRedistributionWithMessageGroups() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      org.junit.Assume.assumeTrue(messageLoadBalancingType == MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
-      MessageRedistributionTest.log.info("Doing test");
+      log.debug("Doing test");
 
       getServer(0).getConfiguration().setGroupingHandlerConfiguration(new GroupingHandlerConfiguration().setName(new SimpleString("handler")).setType(GroupingHandlerConfiguration.TYPE.LOCAL).setAddress(new SimpleString("queues")));
       getServer(1).getConfiguration().setGroupingHandlerConfiguration(new GroupingHandlerConfiguration().setName(new SimpleString("handler")).setType(GroupingHandlerConfiguration.TYPE.REMOTE).setAddress(new SimpleString("queues")));
@@ -146,9 +166,6 @@ public class MessageRedistributionTest extends ClusterTestBase {
       //consume the non grouped messages
       for (int i = 0; i < 5; i++) {
          ClientMessage message = getConsumer(0).receive(5000);
-         if (message == null) {
-            System.out.println();
-         }
          Assert.assertNotNull("" + i, message);
          message.acknowledge();
          Assert.assertNull(message.getSimpleStringProperty(Message.HDR_GROUP_ID));
@@ -168,15 +185,15 @@ public class MessageRedistributionTest extends ClusterTestBase {
          message.acknowledge();
          Assert.assertNotNull(message.getSimpleStringProperty(Message.HDR_GROUP_ID));
       }
-      MessageRedistributionTest.log.info("Test done");
+      log.debug("Test done");
    }
 
    //https://issues.jboss.org/browse/HORNETQ-1057
    @Test
    public void testRedistributionStopsWhenConsumerAdded() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
-      MessageRedistributionTest.log.info("Doing test");
+      log.debug("Doing test");
 
       startServers(0, 1, 2);
 
@@ -206,14 +223,14 @@ public class MessageRedistributionTest extends ClusterTestBase {
       Bindable bindable = servers[0].getPostOffice().getBinding(new SimpleString("queue0")).getBindable();
       String debug = ((QueueImpl) bindable).debug();
       Assert.assertFalse(debug.contains(Redistributor.class.getName()));
-      MessageRedistributionTest.log.info("Test done");
+      log.debug("Test done");
    }
 
    @Test
    public void testRedistributionWhenConsumerIsClosed() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
-      MessageRedistributionTest.log.info("Doing test");
+      log.debug("Doing test");
 
       startServers(0, 1, 2);
 
@@ -247,12 +264,13 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
       verifyReceiveRoundRobinInSomeOrderWithCounts(false, ids1, 0, 2);
 
-      MessageRedistributionTest.log.info("Test done");
+      log.debug("Test done");
    }
 
    @Test
    public void testRedistributionWhenConsumerIsClosedDifferentQueues() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      org.junit.Assume.assumeTrue(messageLoadBalancingType == MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -329,12 +347,12 @@ public class MessageRedistributionTest extends ClusterTestBase {
       Assert.assertNull(consumer1.receiveImmediate());
       Assert.assertNull(consumer2.receiveImmediate());
 
-      MessageRedistributionTest.log.info("Test done");
+      log.debug("Test done");
    }
 
    @Test
    public void testRedistributionWhenConsumerIsClosedNotConsumersOnAllNodes() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -421,7 +439,8 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testNoRedistributionWhenConsumerIsClosedNoConsumersOnOtherNodes() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      org.junit.Assume.assumeFalse(messageLoadBalancingType == MessageLoadBalancingType.STRICT_WITH_REDISTRIBUTION);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -470,7 +489,7 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testRedistributeWithScheduling() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       AddressSettings setting = new AddressSettings().setRedeliveryDelay(10000);
       servers[0].getAddressSettingsRepository().addMatch("queues.testaddress", setting);
@@ -575,7 +594,7 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testRedistributionWhenConsumerIsClosedQueuesWithFilters() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -615,7 +634,7 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testRedistributionWhenConsumerIsClosedConsumersWithFilters() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -655,6 +674,7 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testRedistributionWithPrefixesWhenRemoteConsumerIsAdded() throws Exception {
+      org.junit.Assume.assumeTrue(messageLoadBalancingType == MessageLoadBalancingType.ON_DEMAND);
 
       for (int i = 0; i <= 2; i++) {
          ActiveMQServer server = getServer(i);
@@ -663,7 +683,7 @@ public class MessageRedistributionTest extends ClusterTestBase {
          }
       }
 
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -701,7 +721,8 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testRedistributionWhenRemoteConsumerIsAdded() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      org.junit.Assume.assumeFalse(messageLoadBalancingType == MessageLoadBalancingType.STRICT_WITH_REDISTRIBUTION);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -734,9 +755,93 @@ public class MessageRedistributionTest extends ClusterTestBase {
    }
 
    @Test
+   public void testRedistributionOnlyWhenLocalConsumerIsRemoved() throws Exception {
+      org.junit.Assume.assumeTrue(messageLoadBalancingType == MessageLoadBalancingType.REDISTRIBUTION_ONLY);
+      setupCluster(messageLoadBalancingType);
+
+      startServers(0, 1, 2);
+
+      setupSessionFactory(0, isNetty());
+      setupSessionFactory(1, isNetty());
+      setupSessionFactory(2, isNetty());
+
+      createQueue(0, "queues.testaddress", "queue0", null, false);
+      createQueue(1, "queues.testaddress", "queue0", null, false);
+      createQueue(2, "queues.testaddress", "queue0", null, false);
+
+      addConsumer(0, 0, "queue0", null);
+      addConsumer(1, 1, "queue0", null);
+
+      waitForBindings(0, "queues.testaddress", 1, 1, true);
+      waitForBindings(1, "queues.testaddress", 1, 1, true);
+      waitForBindings(2, "queues.testaddress", 1, 0, true);
+
+      waitForBindings(0, "queues.testaddress", 2, 1, false);
+      waitForBindings(1, "queues.testaddress", 2, 1, false);
+      waitForBindings(2, "queues.testaddress", 2, 2, false);
+
+      send(0, "queues.testaddress", 20, false, null);
+
+      Wait.assertTrue(() -> servers[0].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 20, 2000, 100);
+      Wait.assertTrue(() -> servers[1].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 0, 2000, 100);
+      Wait.assertTrue(() -> servers[2].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 0, 2000, 100);
+
+      removeConsumer(0);
+
+      Wait.assertTrue(() -> servers[0].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 0, 2000, 100);
+      Wait.assertTrue(() -> servers[1].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 20, 2000, 100);
+      Wait.assertTrue(() -> servers[2].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 0, 2000, 100);
+
+      verifyReceiveAll(20, 1);
+      verifyNotReceive(1);
+   }
+
+   @Test
+   public void testRedistributionOnlyWithRemoteConsumer() throws Exception {
+      org.junit.Assume.assumeTrue(messageLoadBalancingType == MessageLoadBalancingType.REDISTRIBUTION_ONLY);
+      setupCluster(messageLoadBalancingType);
+      setRedistributionDelay(2000);
+      startServers(0, 1, 2);
+
+      setupSessionFactory(0, isNetty());
+      setupSessionFactory(1, isNetty());
+      setupSessionFactory(2, isNetty());
+
+      createQueue(0, "queues.testaddress", "queue0", null, false);
+      createQueue(1, "queues.testaddress", "queue0", null, false);
+      createQueue(2, "queues.testaddress", "queue0", null, false);
+
+      addConsumer(1, 1, "queue0", null);
+
+      waitForBindings(0, "queues.testaddress", 1, 0, true);
+      waitForBindings(1, "queues.testaddress", 1, 1, true);
+      waitForBindings(2, "queues.testaddress", 1, 0, true);
+
+      waitForBindings(0, "queues.testaddress", 2, 1, false);
+      waitForBindings(1, "queues.testaddress", 2, 0, false);
+      waitForBindings(2, "queues.testaddress", 2, 1, false);
+
+      send(0, "queues.testaddress", 20, false, null);
+
+      // make sure the messages are on the node to which they were sent (i.e. not load-balanced and not yet redistributed)
+      Wait.assertTrue(() -> servers[0].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 20, 1000, 100);
+      Wait.assertTrue(() -> servers[1].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 0, 1000, 100);
+      Wait.assertTrue(() -> servers[2].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 0, 1000, 100);
+
+      // make sure the messages are redistributed to the node with the consumer
+      Wait.assertTrue(() -> servers[0].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 0, 3000, 100);
+      Wait.assertTrue(() -> servers[1].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 20, 3000, 100);
+      Wait.assertTrue(() -> servers[2].locateQueue(SimpleString.toSimpleString("queue0")).getMessageCount() == 0, 3000, 100);
+
+      verifyReceiveAll(20, 1);
+      verifyNotReceive(1);
+   }
+
+   @Test
    public void testBackAndForth() throws Exception {
+      org.junit.Assume.assumeFalse(messageLoadBalancingType == MessageLoadBalancingType.STRICT_WITH_REDISTRIBUTION);
       for (int i = 0; i < 10; i++) {
-         setupCluster(MessageLoadBalancingType.ON_DEMAND);
+         setupCluster(messageLoadBalancingType);
 
          startServers(0, 1, 2);
 
@@ -835,13 +940,14 @@ public class MessageRedistributionTest extends ClusterTestBase {
    }
 
    public void internalTestBackAndForth2(final boolean useDuplicateDetection) throws Exception {
+      org.junit.Assume.assumeFalse(messageLoadBalancingType == MessageLoadBalancingType.STRICT_WITH_REDISTRIBUTION);
       AtomicInteger duplDetection = null;
 
       if (useDuplicateDetection) {
          duplDetection = new AtomicInteger(0);
       }
       for (int i = 0; i < 10; i++) {
-         setupCluster(MessageLoadBalancingType.ON_DEMAND);
+         setupCluster(messageLoadBalancingType);
 
          startServers(0, 1);
 
@@ -905,7 +1011,8 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testRedistributionToQueuesWhereNotAllMessagesMatch() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      org.junit.Assume.assumeFalse(messageLoadBalancingType == MessageLoadBalancingType.STRICT_WITH_REDISTRIBUTION);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -943,10 +1050,11 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testDelayedRedistribution() throws Exception {
+      org.junit.Assume.assumeTrue(messageLoadBalancingType == MessageLoadBalancingType.ON_DEMAND);
       final long delay = 1000;
       setRedistributionDelay(delay);
 
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -982,10 +1090,11 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testDelayedRedistributionCancelled() throws Exception {
+      org.junit.Assume.assumeFalse(messageLoadBalancingType == MessageLoadBalancingType.STRICT_WITH_REDISTRIBUTION);
       final long delay = 1000;
       setRedistributionDelay(delay);
 
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -1024,7 +1133,8 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testRedistributionNumberOfMessagesGreaterThanBatchSize() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      org.junit.Assume.assumeFalse(messageLoadBalancingType == MessageLoadBalancingType.STRICT_WITH_REDISTRIBUTION);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0, 1, 2);
 
@@ -1071,7 +1181,7 @@ public class MessageRedistributionTest extends ClusterTestBase {
     */
    @Test
    public void testRedistributionWhenNewNodeIsAddedWithConsumer() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       startServers(0);
 
@@ -1102,7 +1212,8 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
    @Test
    public void testRedistributionWithPagingOnTarget() throws Exception {
-      setupCluster(MessageLoadBalancingType.ON_DEMAND);
+      org.junit.Assume.assumeTrue(messageLoadBalancingType == MessageLoadBalancingType.ON_DEMAND);
+      setupCluster(messageLoadBalancingType);
 
       AddressSettings as = new AddressSettings().setAddressFullMessagePolicy(AddressFullMessagePolicy.PAGE).setPageSizeBytes(10000).setMaxSizeBytes(20000);
 
@@ -1161,6 +1272,56 @@ public class MessageRedistributionTest extends ClusterTestBase {
 
       session0.close();
       session1.close();
+   }
+
+   @Test
+   public void testMulitcastAddressMultiQueuesRoutingMultiNode() throws Exception {
+
+      String address = "test.address";
+      String queueNamePrefix = "test.queue";
+      String clusterAddress = "test";
+
+      setupClusterConnection("cluster0", clusterAddress, messageLoadBalancingType, 1, isNetty(), 0, 1, 2);
+      setupClusterConnection("cluster1", clusterAddress, messageLoadBalancingType, 1, isNetty(), 1, 0, 2);
+      setupClusterConnection("cluster2", clusterAddress, messageLoadBalancingType, 1, isNetty(), 2, 0, 1);
+
+      setUpGroupHandler(GroupingHandlerConfiguration.TYPE.LOCAL, 0);
+      setUpGroupHandler(GroupingHandlerConfiguration.TYPE.REMOTE, 1);
+      setUpGroupHandler(GroupingHandlerConfiguration.TYPE.REMOTE, 2);
+
+      startServers(0, 1, 2);
+
+      for (int i = 0; i < 3; i++) {
+         createAddressInfo(i, address, RoutingType.MULTICAST, -1, false);
+         setupSessionFactory(i, isNetty());
+         createQueue(i, address, queueNamePrefix + i, null, false);
+         addConsumer(i, i, queueNamePrefix + i, null);
+      }
+
+      for (int i = 0; i < 3; i++) {
+         waitForBindings(i, address, 1, 1, true);
+         waitForBindings(i, address, 2, 2, false);
+      }
+
+      final int noMessages = 30;
+      send(0, address, noMessages, true, null, null);
+
+      for (int s = 0; s < 3; s++) {
+         final Queue queue = servers[s].locateQueue(new SimpleString(queueNamePrefix + s));
+         Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisfied() throws Exception {
+               return queue.getMessageCount() == noMessages;
+            }
+         });
+      }
+
+      // Each consumer should receive noMessages
+      for (int i = 0; i < noMessages; i++) {
+         for (int c = 0; c < 3; c++) {
+            assertNotNull(consumers[c].consumer.receive(1000));
+         }
+      }
    }
 
    protected void setupCluster(final MessageLoadBalancingType messageLoadBalancingType) throws Exception {
